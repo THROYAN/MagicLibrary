@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{5A79E429-A2BC-4B1E-8DCD-B9C9173A064C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MagicLibrary</RootNamespace>
+    <AssemblyName>Library</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Crypt\FirstClass.cs" />
+    <Compile Include="Graphic\MGraphic.cs" />
+    <Compile Include="MathUtils\DoubleMatrixElement.cs" />
+    <Compile Include="MathUtils\Equation.cs" />
+    <Compile Include="MathUtils\Function.cs" />
+    <Compile Include="MathUtils\FunctionMatrixElement.cs" />
+    <Compile Include="MathUtils\Graphs\Arc.cs" />
+    <Compile Include="MathUtils\Graphs\BiGraph.cs" />
+    <Compile Include="MathUtils\Graphs\DirectedGraph.cs" />
+    <Compile Include="MathUtils\Graphs\Edge.cs" />
+    <Compile Include="MathUtils\Graphs\Interfaces\IEdge.cs" />
+    <Compile Include="MathUtils\Graphs\Interfaces\IGraph.cs" />
+    <Compile Include="MathUtils\Graphs\Trees\Interfaces\ITree.cs" />
+    <Compile Include="MathUtils\Graphs\Trees\Interfaces\ITreeNode.cs" />
+    <Compile Include="MathUtils\Graphs\Interfaces\IVertex.cs" />
+    <Compile Include="MathUtils\Graphs\NamedArc.cs" />
+    <Compile Include="MathUtils\Graphs\Trees\TreeGraph.cs" />
+    <Compile Include="MathUtils\Graphs\SimpleGraph.cs" />
+    <Compile Include="MathUtils\Graphs\Trees\TreeGraphNode.cs" />
+    <Compile Include="MathUtils\Graphs\UndirectedGraph.cs" />
+    <Compile Include="MathUtils\Graphs\Vertex.cs" />
+    <Compile Include="MathUtils\Graphs\WeightedArc.cs" />
+    <Compile Include="MathUtils\Graphs\WeightedGraph.cs" />
+    <Compile Include="MathUtils\MathFunctions\IFunctionable.cs" />
+    <Compile Include="MathUtils\FunctionElement.cs" />
+    <Compile Include="MathUtils\MathFunctions\IMathFunction.cs" />
+    <Compile Include="MathUtils\IMatrixElement.cs" />
+    <Compile Include="MathUtils\InvalidMatrixSizeException.cs" />
+    <Compile Include="MathUtils\Matrix.cs" />
+    <Compile Include="MathUtils\MatrixElementWithVariables.cs" />
+    <Compile Include="MathUtils\OptimisationMethods\FirstOrderMehods.cs" />
+    <Compile Include="MathUtils\OptimisationMethods\FunctionsVariations.cs" />
+    <Compile Include="MathUtils\OptimisationMethods\MinimisationMethods.cs" />
+    <Compile Include="MathUtils\OptimisationMethods\SecondOrderMethods.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Graphs\MarkedPetriGraph.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Graphs\MarkedPlace.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Graphs\MarkingTree.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Graphs\MarkingTreeNode.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Graphs\PetriNetGraph.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Graphs\Place.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Graphs\Transition.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\PetriNet.cs" />
+    <Compile Include="MathUtils\SemanticNetworkUtils\Graphs\ConceptVertex.cs" />
+    <Compile Include="MathUtils\SemanticNetworkUtils\Graphs\RelationArc.cs" />
+    <Compile Include="MathUtils\SemanticNetworkUtils\Graphs\RelationDefinition.cs" />
+    <Compile Include="MathUtils\SemanticNetworkUtils\Graphs\SemanticGraph.cs" />
+    <Compile Include="MathUtils\SemanticNetworkUtils\SemanticNetwork.cs" />
+    <Compile Include="MathUtils\Variable.cs" />
+    <Compile Include="MathUtils\VariablesMulriplication.cs" />
+    <Compile Include="MVC\IController.cs" />
+    <Compile Include="MVC\IView.cs" />
+    <Compile Include="MVC\Controller.cs" />
+    <Compile Include="MVC\View.cs" />
+    <Compile Include="MVC\WinForms\WFControlView.cs" />
+    <Compile Include="MVC\WinForms\WinFormView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="MVC\Wrappers\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

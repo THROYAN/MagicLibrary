@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="MagicLibrary.MathUtils.Graphs.Arc" Collapsed="true">
+    <Position X="3.25" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAACAAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\Arc.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.BiGraph" Collapsed="true">
+    <Position X="0.5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAQAAAACAIAAEAAAAACAAgAAAAAAAAQBAAAE=</HashCode>
+      <FileName>MathUtils\Graphs\BiGraph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.WeightedBiGraph" Collapsed="true">
+    <Position X="0.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAQAEAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\BiGraph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.DirectedGraph" Collapsed="true">
+    <Position X="1.5" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAABAAAAACAAIAAAAAAAEAAAAAAAAFAAEAAA=</HashCode>
+      <FileName>MathUtils\Graphs\DirectedGraph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.Edge" Collapsed="true">
+    <Position X="3.25" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAAAAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\Edge.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.VerticesModifiedEventArgs" Collapsed="true">
+    <Position X="7.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\Interfaces\IGraph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.EdgesModifiedEventArgs" Collapsed="true">
+    <Position X="7.5" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAABIAAAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\Interfaces\IGraph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.SimpleGraph" Collapsed="true">
+    <Position X="5" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\SimpleGraph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.UndirectedGraph" Collapsed="true">
+    <Position X="2.75" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEEAAHAAIAAgAAECAAgAAABAAAQACAAAABAggAAACA=</HashCode>
+      <FileName>MathUtils\Graphs\UndirectedGraph.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.Vertex" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="9.25" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAQAAAAAAgAAAAgAAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\Vertex.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.WeightedArc" Collapsed="true">
+    <Position X="3.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\WeightedArc.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Graphs.WeightedGraph" Collapsed="true">
+    <Position X="2.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAEAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\WeightedGraph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.Matrix" Collapsed="true">
+    <Position X="14.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>JAAIAAAAACAAAEAEaQEAAIAAAAAAACAAAAAAQQAAAAA=</HashCode>
+      <FileName>MathUtils\Matrix.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.DoubleMatrixElement" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="14" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAMAAAAAAAAAAAAEYAIAAAAAAAAAAAAAAAIABAAAAJQ=</HashCode>
+      <FileName>MathUtils\Matrix.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.MatrixElementWithVariables" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="15.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAMAAAEAAAAAAAAEIAIAAAAIAAAAAAAAAAIAAAAAAJQ=</HashCode>
+      <FileName>MathUtils\Matrix.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="MagicLibrary.MathUtils.InvalidMatrixSizeException" Collapsed="true">
+    <Position X="17" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MathUtils\Matrix.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="MagicLibrary.MathUtils.Graphs.IEdge" Collapsed="true">
+    <Position X="7.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAAAAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\Interfaces\IEdge.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MagicLibrary.MathUtils.Graphs.IGraph" Collapsed="true">
+    <Position X="9.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEEAAHAAAAAgAAECAAgAAABAAAAACAAAABAggAAACA=</HashCode>
+      <FileName>MathUtils\Graphs\Interfaces\IGraph.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MagicLibrary.MathUtils.Graphs.IVertex" Collapsed="true">
+    <Position X="7.5" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAQAAAAAAgAAAAgAAAAAAA=</HashCode>
+      <FileName>MathUtils\Graphs\Interfaces\IVertex.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="MagicLibrary.MathUtils.IMatrixElement" Collapsed="true">
+    <Position X="14.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAMAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAIAAAAAAJQ=</HashCode>
+      <FileName>MathUtils\Matrix.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="MagicLibrary.MathUtils.Graphs.ModificationStatus" Collapsed="true">
+    <Position X="7.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQAAgAAAAAAAAAAAAAAAAAIACAAAAII=</HashCode>
+      <FileName>MathUtils\Graphs\Interfaces\IGraph.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Tahoma" Size="8.25" />
+</ClassDiagram>
