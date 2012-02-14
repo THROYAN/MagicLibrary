@@ -67,6 +67,7 @@
     <Compile Include="MathUtils\InvalidMatrixSizeException.cs" />
     <Compile Include="MathUtils\Matrix.cs" />
     <Compile Include="MathUtils\MatrixElementWithVariables.cs" />
+    <Compile Include="MathUtils\Multiset.cs" />
     <Compile Include="MathUtils\OptimisationMethods\FirstOrderMehods.cs" />
     <Compile Include="MathUtils\OptimisationMethods\FunctionsVariations.cs" />
     <Compile Include="MathUtils\OptimisationMethods\MinimisationMethods.cs" />
