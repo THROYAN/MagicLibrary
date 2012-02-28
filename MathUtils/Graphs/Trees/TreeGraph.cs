@@ -10,7 +10,7 @@ namespace MagicLibrary.MathUtils.Graphs.Trees
     {
         public ITreeNode Root { get; protected set; }
 
-        private ITreeNode _addTo { get; set; }
+        protected ITreeNode _addTo { get; set; }
 
         public TreeGraph(object rootValue = null)
             : base()
@@ -24,11 +24,15 @@ namespace MagicLibrary.MathUtils.Graphs.Trees
         {
             DirectedGraph.SetDefaultEventHandlers( tree );
 
-            tree.OnAddVertex += new EventHandler<VerticesModifiedEventArgs>(tree.tree_OnAddVertex);
             tree.OnAddEdge += new EventHandler<EdgesModifiedEventArgs>(tree.tree_OnAddEdge);
             tree.OnRemoveVertex += new EventHandler<VerticesModifiedEventArgs>(tree.tree_OnRemoveVertex);
             tree.OnRemoveEdge += new EventHandler<EdgesModifiedEventArgs>(tree.tree_OnRemoveEdge);
             tree.OnVertexAdded += new EventHandler<VerticesModifiedEventArgs>(tree.tree_OnVertexAdded);
+        }
+
+        public override IVertex CreateVertex(object vertexValue)
+        {
+            return new TreeGraphNode(this, vertexValue, this._addTo as TreeGraphNode);
         }
 
         void tree_OnVertexAdded(object sender, VerticesModifiedEventArgs e)
@@ -84,14 +88,6 @@ namespace MagicLibrary.MathUtils.Graphs.Trees
                 {
                     e.Status = ModificationStatus.Error;
                 }
-            }
-        }
-
-        void tree_OnAddVertex(object sender, VerticesModifiedEventArgs e)
-        {
-            if (e.Status == ModificationStatus.Successful)
-            {
-                e.Vertex = new TreeGraphNode(e.Vertex.Graph as TreeGraph, e.Vertex.Value, this._addTo as TreeGraphNode);
             }
         }
 

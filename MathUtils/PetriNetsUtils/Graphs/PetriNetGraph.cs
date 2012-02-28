@@ -40,26 +40,11 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             PetriNetGraph.SetDefaultEventHandlers(this);
         }
 
-        public static void SetDefaultEventHandlers(PetriNetGraph graph)
+        public override IVertex CreateVertex(object vertexValue)
         {
-            WeightedBiGraph.SetDefaultEventHandlers(graph);
-
-            graph.OnAddVertex += new EventHandler<VerticesModifiedEventArgs>(graph.PetriNetGraph_OnAddVertex);
-        }
-
-        void PetriNetGraph_OnAddVertex(object sender, VerticesModifiedEventArgs e)
-        {
-            if (e.Status == ModificationStatus.Successful)
-            {
-                if (addToSecond)
-                {
-                    e.Vertex = new Transition(sender as IGraph, e.VertexValue as string);
-                }
-                else
-                {
-                    e.Vertex = new Place(sender as IGraph, e.VertexValue as string);
-                }
-            }
+            return this.addToSecond
+                        ? new Transition(this, vertexValue.ToString()) as IVertex
+                        : new Place(this, vertexValue.ToString()) as IVertex;
         }
 
         public void AddPlace(string name = null)

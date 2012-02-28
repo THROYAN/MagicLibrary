@@ -36,15 +36,15 @@ namespace MagicLibrary.MathUtils.Graphs
 
         /// <summary>
         /// Верхние заголовки матрицы инцидентности
-        /// (В двудольном графе верхние и левые заголовки отличаюстся).
+        /// (В двудольном графе верхние и левые заголовки отличаются).
         /// </summary>
-        object[] IncidentsMatrixTopHeaders { get; }
+        string[] IncidentsMatrixTopHeaders { get; }
 
         /// <summary>
         /// Левые заголовки матрицы инцидентности
-        /// (В двудольном графе верхние и левые заголовки отличаюстся).
+        /// (В двудольном графе верхние и левые заголовки отличаются).
         /// </summary>
-        object[] IncidentsMatrixLeftHeaders { get; }
+        string[] IncidentsMatrixLeftHeaders { get; }
 
         /// <summary>
         /// Вершина в графе
@@ -74,6 +74,23 @@ namespace MagicLibrary.MathUtils.Graphs
         IEdge GetEdge(Predicate<IEdge> match);
         List<IEdge> GetEdges(Predicate<IEdge> match);
         List<IEdge> GetEdges();
+
+        /// <summary>
+        /// Создание вершины соотвествующей типу текущего графа.
+        /// Вершина не добавляется в граф!
+        /// </summary>
+        /// <param name="vertexValue">Значение вершины</param>
+        /// <returns></returns>
+        IVertex CreateVertex(object vertexValue);
+
+        /// <summary>
+        /// Создание дуги соотвествующей типу текущего графа.
+        /// Дуга не добавляется в граф!
+        /// </summary>
+        /// <param name="u">Хвост</param>
+        /// <param name="v">Голова</param>
+        /// <returns></returns>
+        IEdge CreateEdge(object u, object v);
 
         /// <summary>
         /// Удаление вершины

@@ -19,22 +19,11 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             MarkedPetriGraph.SetDefaultEventHandlers(this);
         }
 
-        public static void SetDefaultEventHandlers(MarkedPetriGraph graph)
+        public override IVertex CreateVertex(object vertexValue)
         {
-            PetriNetGraph.SetDefaultEventHandlers(graph);
-
-            graph.OnAddVertex += new EventHandler<VerticesModifiedEventArgs>(graph.MarkedPetriGraph_OnAddVertex);
-        }
-
-        void MarkedPetriGraph_OnAddVertex(object sender, VerticesModifiedEventArgs e)
-        {
-            if (e.Status == ModificationStatus.Successful)
-            {
-                if (e.Vertex is Place)
-                {
-                    e.Vertex = new MarkedPlace(this, e.Vertex.Value as string) { TokenCount = currentTokenCount };
-                }
-            }
+            return this.addToSecond
+                        ? new Transition(this, vertexValue.ToString()) as IVertex
+                        : new MarkedPlace(this, vertexValue.ToString()) { TokenCount = this.currentTokenCount } as IVertex;
         }
 
         public void AddPlace(string name, int tokenCount)

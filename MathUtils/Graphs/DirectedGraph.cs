@@ -35,6 +35,11 @@ namespace MagicLibrary.MathUtils.Graphs
             }
         }
 
+        public override IEdge CreateEdge(object u, object v)
+        {
+            return new Arc(this, u, v);
+        }
+
         void DirectedGraph_OnAddEdge(object sender, EdgesModifiedEventArgs e)
         {
             if (e.Status == ModificationStatus.Successful)
@@ -44,8 +49,6 @@ namespace MagicLibrary.MathUtils.Graphs
                     e.Status = ModificationStatus.AlreadyExist;
                     e.Edge = this[e.u, e.v];
                 }
-                else
-                    e.Edge = new Arc(this, e.Edge.Vertices[0].Value, e.Edge.Vertices[1].Value);
             }
         }
 

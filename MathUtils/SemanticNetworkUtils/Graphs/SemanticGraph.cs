@@ -34,6 +34,16 @@ namespace MagicLibrary.MathUtils.SemanticNetworkUtils.Graphs
             graph.OnAddEdge += new EventHandler<EdgesModifiedEventArgs>(graph.graph_OnAddEdge);
         }
 
+        public override IVertex CreateVertex(object vertexValue)
+        {
+            return new ConceptVertex(this, this._currentId, vertexValue.ToString());
+        }
+
+        public override IEdge CreateEdge(object u, object v)
+        {
+            return new RelationArc(this, u.ToString(), this._currentArcId, v.ToString());
+        }
+
         void graph_OnAddEdge(object sender, EdgesModifiedEventArgs e)
         {
             if (e.Status == ModificationStatus.Successful)
@@ -50,8 +60,6 @@ namespace MagicLibrary.MathUtils.SemanticNetworkUtils.Graphs
                     e.Status = ModificationStatus.InvalidParameters;
                     return;
                 }
-
-                e.Edge = new RelationArc(this, e.u.ToString(), this._currentArcId, e.v.ToString());
             }
         }
 
@@ -65,8 +73,6 @@ namespace MagicLibrary.MathUtils.SemanticNetworkUtils.Graphs
                     e.Status = ModificationStatus.AlreadyExist;
                     return;
                 }
-
-                e.Vertex = new ConceptVertex(this, this._currentId, e.VertexValue.ToString());
             }
         }
 

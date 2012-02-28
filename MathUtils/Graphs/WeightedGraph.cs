@@ -7,7 +7,7 @@ using System.Windows.Forms;
 namespace MagicLibrary.MathUtils.Graphs
 {
     [Serializable]
-    public class WeightedGraph : DirectedGraph
+    public class WeightedGraph : UndirectedGraph
     {
         private double currentWeigth;
 
@@ -19,9 +19,14 @@ namespace MagicLibrary.MathUtils.Graphs
 
         public static void SetDefaultEventHandlers( WeightedGraph graph )
         {
-            DirectedGraph.SetDefaultEventHandlers(graph);
-
+            //DirectedGraph.SetDefaultEventHandlers(graph);
+            graph.ClearEventHandlers();
             graph.OnAddEdge += new EventHandler<EdgesModifiedEventArgs>(graph.WeightedGraph_OnAddEdge);
+        }
+
+        public override IEdge CreateEdge(object u, object v)
+        {
+            return new WeightedArc(this, u, v, this.currentWeigth);
         }
 
         void WeightedGraph_OnAddEdge(object sender, EdgesModifiedEventArgs e)
@@ -30,16 +35,12 @@ namespace MagicLibrary.MathUtils.Graphs
             {
                 (e.Edge as WeightedArc).Weight += currentWeigth;
             }
-            if (e.Status == ModificationStatus.Successful)
-            {
-                e.Edge = new WeightedArc(sender as IGraph, e.u, e.v, currentWeigth);
-            }
         }
 
         public void AddArc(object tail, object head, double weight)
         {
             currentWeigth = weight;
-            AddArc(tail, head);
+            this.AddEdge(tail, head);
             currentWeigth = 1;
         }
 

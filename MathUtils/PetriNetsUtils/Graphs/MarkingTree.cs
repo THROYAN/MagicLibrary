@@ -28,18 +28,18 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         public static void SetDefaultEventHandlers(MarkingTree tree)
         {
             TreeGraph.SetDefaultEventHandlers(tree);
-            tree.OnAddVertex += new EventHandler<VerticesModifiedEventArgs>(tree.tree_OnAddVertex);
+
             tree.OnVertexAdded += new EventHandler<VerticesModifiedEventArgs>(tree.tree_OnVertexAdded);
-            tree.OnAddEdge += new EventHandler<EdgesModifiedEventArgs>(tree.tree_OnAddEdge);
         }
 
-        void tree_OnAddEdge(object sender, EdgesModifiedEventArgs e)
+        public override IEdge CreateEdge(object u, object v)
         {
-            if (e.Status == ModificationStatus.Successful)
-            {
-                Arc arc = e.Edge as Arc;
-                e.Edge = new NamedArc(arc.Graph, arc.Tail.Value, arc.Head.Value, this._currentTransitionName);
-            }
+            return new NamedArc(this, u, v, this._currentTransitionName);
+        }
+
+        public override IVertex CreateVertex(object vertexValue)
+        {
+            return new MarkingTreeNode(this, vertexValue.ToString(), this._addTo as MarkingTreeNode, this._currentMarking);
         }
 
         void tree_OnVertexAdded(object sender, VerticesModifiedEventArgs e)
@@ -48,16 +48,6 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             {
                 if(!(e.Vertex as MarkingTreeNode).IsRoot())
                     (e.Vertex as MarkingTreeNode).RecalculateMarking();
-            }
-        }
-
-        void tree_OnAddVertex(object sender, VerticesModifiedEventArgs e)
-        {
-            if (e.Status == ModificationStatus.Successful)
-            {
-                TreeGraphNode node = e.Vertex as TreeGraphNode;
-                
-                e.Vertex = new MarkingTreeNode(this, node.Value.ToString(), node.Parent as MarkingTreeNode, this._currentMarking);
             }
         }
 

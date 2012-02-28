@@ -47,9 +47,7 @@ namespace MagicLibrary.MathUtils.Graphs
         {
             DirectedGraph.SetDefaultEventHandlers( graph );
 
-            //graph.OnAddVertex += new EventHandler<VerticesModifiedEventArgs>(graph.BiGraph_OnAddVertex);
             graph.OnAddEdge += new EventHandler<EdgesModifiedEventArgs>(graph.BiGraph_OnAddEdge);
-            //graph.OnRemoveVertex += new EventHandler<VerticesModifiedEventArgs>(graph.BiGraph_OnRemoveVertex);
             graph.OnVertexAdded += new EventHandler<VerticesModifiedEventArgs>(graph.graph_OnVertexAdded);
             graph.OnVertexRemoved += new EventHandler<VerticesModifiedEventArgs>(graph.graph_OnVertexRemoved);
         }
@@ -223,15 +221,16 @@ namespace MagicLibrary.MathUtils.Graphs
             graph.OnAddEdge += new EventHandler<EdgesModifiedEventArgs>(graph.WeightedBiGraph_OnAddEdge);
         }
 
+        public override IEdge CreateEdge(object u, object v)
+        {
+            return new WeightedArc(this, u, v);
+        }
+
         void WeightedBiGraph_OnAddEdge(object sender, EdgesModifiedEventArgs e)
         {
             if (e.Status == ModificationStatus.AlreadyExist)
             {
                 (e.Edge as WeightedArc).Weight += currentWeigth;
-            }
-            if (e.Status == ModificationStatus.Successful)
-            {
-                e.Edge = new WeightedArc(sender as IGraph, e.u, e.v, currentWeigth);
             }
         }
 

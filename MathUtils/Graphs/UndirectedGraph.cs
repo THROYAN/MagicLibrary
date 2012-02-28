@@ -14,17 +14,17 @@ namespace MagicLibrary.MathUtils.Graphs
         /// <summary>
         /// Список вершин
         /// </summary>
-        private List<Vertex> vertices { get; set; }
+        private List<IVertex> vertices { get; set; }
 
         /// <summary>
         /// Список рёбер
         /// </summary>
-        private List<Edge> edges { get; set; }
+        private List<IEdge> edges { get; set; }
 
         public UndirectedGraph()
         {
-            vertices = new List<Vertex>();
-            edges = new List<Edge>();
+            vertices = new List<IVertex>();
+            edges = new List<IEdge>();
         }
 
         public int Order
@@ -70,12 +70,12 @@ namespace MagicLibrary.MathUtils.Graphs
         {
             ModificationStatus status = !vertices.Exists(v => v.Value.Equals(vertexValue)) ? ModificationStatus.Successful : ModificationStatus.AlreadyExist;
 
-            VerticesModifiedEventArgs e = new VerticesModifiedEventArgs(status, new Vertex(this,vertexValue),vertexValue);
+            VerticesModifiedEventArgs e = new VerticesModifiedEventArgs(status, this.CreateVertex(vertexValue),vertexValue);
             if (OnAddVertex != null)
                 OnAddVertex(this, e);
 
             if (e.Status == ModificationStatus.Successful)
-                vertices.Add(e.Vertex as Vertex);
+                vertices.Add(e.Vertex);
 
             if (OnVertexAdded != null)
                 OnVertexAdded(this, e);
@@ -106,14 +106,14 @@ namespace MagicLibrary.MathUtils.Graphs
             if (!(vertices.Exists(vert => vert.Value.Equals(v)) && vertices.Exists(vert => vert.Value.Equals(u))))
                 status = ModificationStatus.InvalidParameters;
 
-            Edge edge = new Edge(this, u, v);
+            IEdge edge = this.CreateEdge(u, v);
             EdgesModifiedEventArgs e = new EdgesModifiedEventArgs(status, edge, u, v);
 
             if (OnAddEdge != null)
                 OnAddEdge(this, e);
 
             if (e.Status == ModificationStatus.Successful)
-                edges.Add(e.Edge as Edge);
+                edges.Add(e.Edge);
 
             if (OnEdgeAdded != null)
                 OnEdgeAdded(this, e);
@@ -121,7 +121,7 @@ namespace MagicLibrary.MathUtils.Graphs
 
         public void RemoveEdge(object u, object v)
         {
-            Edge edge = edges.Find(e =>
+            IEdge edge = edges.Find(e =>
                                 (e.Vertices[0].Value.Equals(u) && e.Vertices[1].Value.Equals(v)) ||
                                 (e.Vertices[1].Value.Equals(u) && e.Vertices[0].Value.Equals(v)));
 
@@ -181,8 +181,8 @@ namespace MagicLibrary.MathUtils.Graphs
         {
             graph = new UndirectedGraph();
             UndirectedGraph g = graph as UndirectedGraph;
-            g.vertices = new List<Vertex>(this.vertices);
-            g.edges = new List<Edge>(this.edges);
+            g.vertices = new List<IVertex>(this.vertices);
+            g.edges = new List<IEdge>(this.edges);
         }
 
 
@@ -202,19 +202,19 @@ namespace MagicLibrary.MathUtils.Graphs
             }
         }
 
-        public virtual object[] IncidentsMatrixTopHeaders
+        public virtual string[] IncidentsMatrixTopHeaders
         {
             get
             {
-                return this.VerticesValues;
+                return this.VerticesValues.Select(o => o.ToString()).ToArray();
             }
         }
 
-        public virtual object[] IncidentsMatrixLeftHeaders
+        public virtual string[] IncidentsMatrixLeftHeaders
         {
             get
             {
-                return this.VerticesValues;
+                return this.VerticesValues.Select(o => o.ToString()).ToArray();
             }
         }
 
@@ -263,18 +263,14 @@ namespace MagicLibrary.MathUtils.Graphs
             {
                 edges = this.edges.ToList(),
                 vertices = this.vertices.ToList()
-                //OnAddEdge = this.OnAddEdge.Clone() as EventHandler,
-                //OnAddVertex = this.OnAddVertex.Clone() as EventHandler,
-                //OnRemoveEdge = this.OnRemoveEdge.Clone() as EventHandler,
-                //OnRemoveVertex = this.OnRemoveVertex.Clone() as EventHandler
             };
         }
 
         public virtual void CopyTo(IGraph graph)
         {
 
-            (graph as UndirectedGraph).edges = new List<Edge>(this.edges);
-            (graph as UndirectedGraph).vertices = new List<Vertex>(this.vertices);
+            (graph as UndirectedGraph).edges = new List<IEdge>(this.edges);
+            (graph as UndirectedGraph).vertices = new List<IVertex>(this.vertices);
 
             graph.GetVertices().ForEach(v => v.Graph = graph);
             graph.GetEdges().ForEach(e => e.Graph = graph);
@@ -323,6 +319,16 @@ namespace MagicLibrary.MathUtils.Graphs
         {
             graph.GetVertices().ForEach(v => this.AddVertex(v.Value));
             graph.GetEdges().ForEach(e => this.AddEdge(e.Vertices[0].Value, e.Vertices[1].Value));
+        }
+
+        public virtual IVertex CreateVertex(object vertexValue)
+        {
+            return new Vertex(this, vertexValue);
+        }
+
+        public virtual IEdge CreateEdge(object u, object v)
+        {
+            return new Edge(this, u, v);
         }
     }
 }

@@ -34,13 +34,6 @@ namespace MagicLibrary.MathUtils.Graphs
                     e.Status = ModificationStatus.Error;
             }
         }
-        //new public void AddEdge(object u, object v)
-        //{
-        //    if (this[u, v] == null && u != v)
-        //    {
-        //        base.AddEdge(u, v);
-        //    }
-        //}
 
         public override object Clone()
         {
