@@ -138,5 +138,42 @@ namespace MagicLibrary.MathUtils.Graphs
             base.CopyTo(graph);
             DirectedGraph.SetDefaultEventHandlers( graph as DirectedGraph );
         }
+
+        public override IEdge[] FindPath(object from, object to)
+        {
+            return this.findPath(from, to, null);
+        }
+
+        private IEdge[] findPath(object from, object to, IEdge[] path)
+        {
+            if (from.Equals(to))
+            {
+                return path;
+            }
+            foreach (var e in this.GetOutArcs(from))
+            {
+                if (path == null || !path.Contains(e))
+                {
+                    List<IEdge> newPath = new List<IEdge>();
+                    if (path != null)
+                        newPath = new List<IEdge>(path);
+                    newPath.Add(e);
+                    var res = this.findPath(e.Vertices[1].Value, to, newPath.ToArray());
+                    if (res != null)
+                        return res;
+                }
+            }
+            return null;
+        }
+
+        public List<IEdge> GetOutArcs(object v)
+        {
+            return this.GetEdges(e => (e as Arc).Tail.Value.Equals(v));
+        }
+
+        public List<IEdge> GetInArcs(object v)
+        {
+            return this.GetEdges(e => (e as Arc).Head.Value.Equals(v));
+        }
     }
 }

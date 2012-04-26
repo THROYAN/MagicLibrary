@@ -30,11 +30,15 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         public virtual bool IsAvailable()
         {
             bool f = true;// GetEnters(t).Length > 0;
-            GetEnters().ToList().ForEach(delegate(MarkedPlace p)
+
+            var enters = this.GetEnters();
+
+
+            foreach (var p in enters)
             {
-                if (p.TokenCount < (this.Graph[p.Value, this.Value] as WeightedArc).Weight)
+                if (p.TokensCount < (this.Graph[p.Value, this.Value] as WeightedArc).Weight)
                     f = false;
-            });
+            }
             return f;
         }
 
@@ -42,12 +46,47 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         {
             if (!IsAvailable())
                 return;
-            GetEnters().ToList().ForEach(p => 
-                p.TokenCount -= (int)(Graph[p.Value, this.Value] as WeightedArc).Weight
-            );
-            GetExits().ToList().ForEach(p => 
-                p.TokenCount += (int)(Graph[this.Value, p.Value] as WeightedArc).Weight
-            );
+
+            foreach (var item in this.GetRemovingTokens())
+            {
+                item.Key.RemoveTokens(item.Value);
+            }
+            foreach (var item in this.GetAddingTokens())
+            {
+                item.Key.AddTokens(item.Value);
+            }
+
+            //GetEnters().ToList().ForEach(p => 
+            //    p.TokensCount -= (uint)(Graph[p.Value, this.Value] as WeightedArc).Weight
+            //);
+            //GetExits().ToList().ForEach(p => 
+            //    p.TokensCount += (uint)(Graph[this.Value, p.Value] as WeightedArc).Weight
+            //);
+        }
+
+        public virtual Dictionary<MarkedPlace, Token[]> GetRemovingTokens()
+        {
+            Dictionary<MarkedPlace, Token[]> tokens = new Dictionary<MarkedPlace,Token[]>();
+            foreach (var p in this.GetEnters())
+            {
+                int count = (int)(Graph[p.Value, this.Value] as WeightedArc).Weight;
+                tokens[p] = p.Tokens.GetRange(0, count - 1).ToArray();
+            }
+            return tokens;
+        }
+
+        public virtual Dictionary<MarkedPlace, Token[]> GetAddingTokens()
+        {
+            Dictionary<MarkedPlace, Token[]> tokens = new Dictionary<MarkedPlace, Token[]>(); ;
+
+            foreach (var p in this.GetExits())
+            {
+                uint count = (uint)(Graph[this.Value, p.Value] as WeightedArc).Weight;
+
+                //tokens[p] = new Token[] { new Token(new UnitColorSet("token"), "()", count) };
+            }
+
+            return tokens;
         }
     }
 }

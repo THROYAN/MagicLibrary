@@ -38,6 +38,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Crypt\FirstClass.cs" />
+    <Compile Include="Exceptions\InvalidAttributesException.cs" />
+    <Compile Include="Exceptions\InvalidColorSetAttributesException.cs" />
+    <Compile Include="Exceptions\InvalidTokenException.cs" />
     <Compile Include="Graphic\MGraphic.cs" />
     <Compile Include="MathUtils\DoubleMatrixElement.cs" />
     <Compile Include="MathUtils\Equation.cs" />
@@ -72,6 +75,8 @@
     <Compile Include="MathUtils\OptimisationMethods\FunctionsVariations.cs" />
     <Compile Include="MathUtils\OptimisationMethods\MinimisationMethods.cs" />
     <Compile Include="MathUtils\OptimisationMethods\SecondOrderMethods.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\ColorSet.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Graphs\ColouredPetriGraph.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\MarkedPetriGraph.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\MarkedPlace.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\MarkingTree.cs" />
@@ -79,7 +84,12 @@
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\PetriNetGraph.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\Place.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\Transition.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\IColorSet.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\IToken.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\PetriNet.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Token.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\UnitColorSet.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\UnitToken.cs" />
     <Compile Include="MathUtils\SemanticNetworkUtils\Graphs\ConceptVertex.cs" />
     <Compile Include="MathUtils\SemanticNetworkUtils\Graphs\RelationArc.cs" />
     <Compile Include="MathUtils\SemanticNetworkUtils\Graphs\RelationDefinition.cs" />
@@ -95,14 +105,14 @@
     <Compile Include="MVC\WinForms\WinFormView.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Fliters\CollectionFilters.cs" />
+    <Compile Include="Fliters\FilterableList.cs" />
+    <Compile Include="Fliters\IFilterableList.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="MVC\Wrappers\" />
