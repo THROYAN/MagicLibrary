@@ -10,30 +10,47 @@ namespace MagicLibrary.MathUtils.Graphs
     {
         public IGraph Graph { get; set; }
 
-        public IVertex[] Vertices { get; set; }
+        private object u { get { return this.Vertices[0].Value; } set { this.Vertices[0].Value = value; } }
+        private object v { get { return this.Vertices[1].Value; } set { this.Vertices[1].Value = value; } }
+
+        public IVertex[] Vertices
+        {
+            get;// { return new IVertex[] { this.Graph[u], this.Graph[v] }; }
+            set;
+            //{
+            //    this.u = value[0].Value;
+            //    this.v = value[1].Value;
+            //}
+        }
 
         public Edge(IGraph graph, object u, object v)
         {
             this.Graph = graph;
+            //this.u = u;
+            //this.v = v;
             this.Vertices = new IVertex[2];
-            this.Vertices[0] = Graph[u];
-            this.Vertices[1] = Graph[v];
-        }
-
-        public void CopyTo(out IEdge edge)
-        {
-            edge = this.Clone() as Edge;
+            this.Vertices[0] = this.Graph[u];
+            this.Vertices[1] = this.Graph[v];
         }
 
         public virtual void CopyTo(IEdge edge)
         {
             edge.Graph = this.Graph;
-            edge.Vertices = this.Vertices;
+            var e = edge as Edge;
+            e.Vertices[0] = this.Vertices[0];
+            e.Vertices[1] = this.Vertices[1];
         }
 
         public virtual object Clone()
         {
-            return new Edge(this.Graph, this.Vertices[0], this.Vertices[1]);
+            Edge e = new Edge(this.Graph, this.u, this.v);
+            this.CopyTo(e);
+            return e;
+        }
+
+        public override string ToString()
+        {
+            return String.Format("[{0}-{1}]", this.Vertices[0].Value, this.Vertices[1].Value);
         }
     }
 }

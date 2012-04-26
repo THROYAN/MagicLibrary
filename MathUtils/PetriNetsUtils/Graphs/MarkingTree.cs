@@ -10,11 +10,11 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
 {
     public class MarkingTree : TreeGraph
     {
-        private int[] _currentMarking;
+        private uint[] _currentMarking;
         private string _currentTransitionName;
         private int _count;
 
-        public MarkingTree(int[] startMarking, string rootName = null)
+        public MarkingTree(uint[] startMarking, string rootName = null)
             : base()
         {
             this._count = 0;
@@ -51,7 +51,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             }
         }
 
-        public void AddMarking(int[] marking, string parentMarkingName, string transitionName = "", string nodeName = null)
+        public void AddMarking(uint[] marking, string parentMarkingName, string transitionName = "", string nodeName = null)
         {
             if (nodeName == null)
                 nodeName = String.Format("S{0}", ++this._count);
@@ -60,7 +60,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
 
             this.AddTreeNode(nodeName, parentMarkingName);
 
-            this._currentMarking = new int[] { 0 };
+            this._currentMarking = new uint[] { 0 };
 
             //return this[nodeName] as MarkingTreeNode;
         }
@@ -119,25 +119,25 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         {
             if (!this.IsLimited())
                 return -1;
-            int max = 0;
+            uint max = 0;
             for (int i = 0; i < (this.Root as MarkingTreeNode).Marking.Length; i++)
             {
-                int l = this.GetPlaceLimit(i);
+                uint l = this.GetPlaceLimit(i);
                 if (max < l)
                     max = l;
             }
-            return max;
+            return (int)max;
         }
 
-        public int GetPlaceLimit(int index)
+        public uint GetPlaceLimit(int index)
         {
             if (index >= (this.Root as MarkingTreeNode).Marking.Length)
-                throw new Exception("Index was out of range");
+                throw new IndexOutOfRangeException();
             return this.GetPlaceLimit(index, this.Root as MarkingTreeNode, (this.Root as MarkingTreeNode).Marking[index]);
         }
-        private int GetPlaceLimit(int index, MarkingTreeNode node, int max)
+        private uint GetPlaceLimit(int index, MarkingTreeNode node, uint max)
         {
-            int _max;
+            uint _max;
             if (node.Marking[index] > max)
                 _max = node.Marking[index];
             else
@@ -146,7 +146,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             if (node.Children.Count == 0)
                 return _max;
 
-            int maxChilds = node.Children.Max(child => this.GetPlaceLimit(index, child as MarkingTreeNode, _max));
+            uint maxChilds = node.Children.Max(child => this.GetPlaceLimit(index, child as MarkingTreeNode, _max));
             return Math.Max(_max, maxChilds);
         }
 
@@ -203,7 +203,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         /// </summary>
         /// <param name="marking"></param>
         /// <returns></returns>
-        public int IsAchievable(int[] marking)
+        public int IsAchievable(uint[] marking)
         {
             bool f = false;
             var m = new MarkingTreeNode(null, null, null, marking);

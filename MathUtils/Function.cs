@@ -383,20 +383,6 @@ namespace MagicLibrary.MathUtils
             Function F = this.Clone() as Function;
             F.Degree *= power;
             return F;
-            Function f = new Function(1);
-            if (power < 0)
-            {
-                for (int i = 0; i > power; i--)
-                {
-                    f /= this;
-                }
-            }
-
-            for (int i = 0; i < power; i++)
-            {
-                f *= this;
-            }
-            return f;
         }
 
         public FunctionElement Sqrt()
@@ -705,14 +691,6 @@ namespace MagicLibrary.MathUtils
         public override FunctionElement SetVariableValue(string name, double value)
         {
             return this.SetVariableValue(name, new Function(value));
-            Function e = new Function();
-
-            this.variables.ForEach(v => e += v.SetVariableValue(name, value));
-            e.Degree = this.Degree;
-
-            if (e.IsConstant())
-                return new Function(Math.Pow(e.ToDouble(), this.Degree));
-            return e;
         }
 
         public override FunctionElement SetVariableValue(string name, FunctionElement e)

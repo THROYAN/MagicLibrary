@@ -10,17 +10,17 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
 {
     public class MarkingTreeNode : TreeGraphNode
     {
-        public int[] Marking
+        public uint[] Marking
         {
             get;
             set;
         }
 
-        public static int w = Int32.MaxValue;
+        public static uint w = UInt32.MaxValue;
 
         public MarkingNodeStatus Status { get; set; }
 
-        public MarkingTreeNode(TreeGraph tree, string markingName, MarkingTreeNode parent, int[] marking)
+        public MarkingTreeNode(TreeGraph tree, string markingName, MarkingTreeNode parent, uint[] marking)
             : base(tree, markingName, parent)
         {
             this.Marking = marking;
@@ -93,8 +93,8 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
 
         public void RecalculateMarking()
         {
-            int[] newM = new int[this.Marking.Length];
-            int[] oldMarking = (this.Parent as MarkingTreeNode).Marking;
+            uint[] newM = new uint[this.Marking.Length];
+            uint[] oldMarking = (this.Parent as MarkingTreeNode).Marking;
 
             (this.Parent as MarkingTreeNode).Status = MarkingNodeStatus.Inside;
 
@@ -173,14 +173,14 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         {
             if(this.HasW())
                 return -1;
-            return this.Marking.Sum();
+            return this.Marking.Sum(e => (int)e);
         }
 
         public int GetMarksMaxValue()
         {
             if (this.HasW())
                 return -1;
-            return this.Marking.Max();
+            return (int)this.Marking.Max();
         }
 
          

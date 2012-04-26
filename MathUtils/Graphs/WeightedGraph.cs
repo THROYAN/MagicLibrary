@@ -7,7 +7,7 @@ using System.Windows.Forms;
 namespace MagicLibrary.MathUtils.Graphs
 {
     [Serializable]
-    public class WeightedGraph : UndirectedGraph
+    public class WeightedGraph : DirectedGraph
     {
         private double currentWeigth;
 
@@ -19,8 +19,9 @@ namespace MagicLibrary.MathUtils.Graphs
 
         public static void SetDefaultEventHandlers( WeightedGraph graph )
         {
-            //DirectedGraph.SetDefaultEventHandlers(graph);
             graph.ClearEventHandlers();
+            DirectedGraph.SetDefaultEventHandlers(graph);
+            
             graph.OnAddEdge += new EventHandler<EdgesModifiedEventArgs>(graph.WeightedGraph_OnAddEdge);
         }
 

@@ -394,65 +394,6 @@ namespace MagicLibrary.MathUtils
             }
 
             return sb.ToString();
-
-            // --------------------
-
-            this.variables.ForEach(delegate(FunctionElement v)
-            {
-                if (first)
-                {
-                    if (this.Constant < 0)
-                    {
-                        sb.Append(" - ");
-                    }
-                    if (Math.Abs(this.Constant) != 1)
-                    {
-                        sb.AppendFormat("{0}*", Math.Abs(this.Constant));
-                    }
-                }
-
-                string temp = v.ToString();
-                if (temp != "" && temp != "1")
-                {
-                    if (v is Variable)
-                    {
-                        sb.AppendFormat("{1}{0}", temp, first ? "" : "*");
-                    }
-                    else
-                    {
-                        if (v.Degree == 1)
-                        {
-                            if (this.Constant == 1 && this.variables.Count == 1)
-                            {
-                                sb.AppendFormat("{1}{0}", temp, first ? "" : "*");
-                            }
-                            else
-                            {
-                                sb.AppendFormat("{1}({0})", temp, first ? "" : "*");
-                            }
-                        }
-                        else
-                            sb.AppendFormat("{1}{0}", temp, first ? "" : "*");
-                    }
-                    first = false;
-                }
-                else
-                {
-                    if (first)
-                        sb.Clear();
-                }
-            });
-
-            if (sb.Length == 0)
-            {
-                if (this.Constant < 0)
-                {
-                    return String.Format(" - {0}", Math.Abs(this.Constant));
-                }
-                return this.Constant.ToString();
-            }
-
-            return sb.ToString();
         }
 
         public override bool Equals(object obj)
@@ -744,7 +685,6 @@ namespace MagicLibrary.MathUtils
                 return f.ForceMul(new Function(this.Constant));
             }
             throw new Exception();
-            return new Function(this);
         }
 
         private string getVarMLString(FunctionElement e, bool needBrackets = true)

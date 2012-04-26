@@ -15,11 +15,11 @@ namespace MagicLibrary.MathUtils.Graphs
         {
             get
             {
-                return ((IEdge)this).Vertices[1];
+                return this.Vertices[1];
             }
             set
             {
-                ((IEdge)this).Vertices[1] = value;
+                this.Vertices[1] = value;
             }
         }
 
@@ -30,14 +30,19 @@ namespace MagicLibrary.MathUtils.Graphs
         {
             get
             {
-                return ((IEdge)this).Vertices[0];
+                return this.Vertices[0];
             }
             set
             {
-                ((IEdge)this).Vertices[0] = value;
+                this.Vertices[0] = value;
             }
         }
 
         public Arc(IGraph graph, object tail, object head) : base(graph, tail, head) { }
+
+        public override string ToString()
+        {
+            return String.Format("[{0}->{1}]", this.Tail.Value, this.Head.Value);
+        }
     }
 }

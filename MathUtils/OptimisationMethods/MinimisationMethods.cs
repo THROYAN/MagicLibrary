@@ -96,8 +96,6 @@ namespace MagicLibrary.MathUtils.OptimisationMethods
 
         static public Tuple<Matrix, string> BarrierMethod(Function f, Equation[] q, Matrix x0, double e, double r0, double C)
         {
-            string matrixStartLine = "[", matrixElementsSeparator = ", ", matrixEndLine = "]";
-
             List<Function> qm = new List<Function>(), qp = new List<Function>();
             StringBuilder sb = new StringBuilder("<h1>Метод барьерных функций</h1></br>");
 

@@ -26,15 +26,15 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             this.SetMarking(this.StartMarking);
         }
 
-        public int[] StartMarking { get; private set; }
+        public uint[] StartMarking { get; private set; }
 
-        public int[] GetState()
+        public uint[] GetState()
         {
             var places = this.Graph.GetPlaces();
 
-            int[] state = new int[places.Count];
+            uint[] state = new uint[places.Count];
             int i = 0;
-            places.ForEach(p => state[i++] = (p as MarkedPlace).TokenCount);
+            places.ForEach(p => state[i++] = (p as MarkedPlace).TokensCount);
 
             return state;
         }
@@ -44,7 +44,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             this.StartMarking = this.GetState();
         }
 
-        public void SetMarking(int[] marking)
+        public void SetMarking(uint[] marking)
         {
             if (marking.Length != this.Graph.PlacesCount)
                 throw new Exception("Marking array length must equals a places count of Petri Net");
@@ -53,10 +53,13 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
 
             int i = 0;
             // If marking[i] == w then set it very big integer
-            places.ForEach(p =>
-                (p as MarkedPlace).TokenCount = 
-                    marking[i++] != MarkingTreeNode.w ? marking[i - 1] : Int32.MaxValue
-            );
+            //places.ForEach(p =>
+            //    (p as MarkedPlace).SetTokenCount(
+            //            marking[i++] != MarkingTreeNode.w ?
+            //                marking[i - 1]
+            //                : UInt32.MaxValue)
+            //);
+#warning !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
 
         public MarkingTree GetReachabilityTree()
@@ -152,7 +155,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         /// </summary>
         /// <param name="marking">Marking in which we want to know available transitions (marking of the net will not change)</param>
         /// <returns></returns>
-        public Transition[] GetAvailableTransitions(int[] marking = null)
+        public Transition[] GetAvailableTransitions(uint[] marking = null)
         {
             if (marking != null)
             {
@@ -186,9 +189,9 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         /// <param name="marking"></param>
         /// <param name="t"></param>
         /// <returns></returns>
-        public int[] GetStateAfterExecute(int[] marking, Transition t)
+        public uint[] GetStateAfterExecute(uint[] marking, Transition t)
         {
-            int[] newMarking = null;
+            uint[] newMarking = null;
 
             this.SaveMarkingAsStartMarking();
             this.SetMarking(marking);

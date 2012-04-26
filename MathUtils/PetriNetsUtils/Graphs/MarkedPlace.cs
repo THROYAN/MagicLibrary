@@ -11,17 +11,39 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
     [Serializable]
     public class MarkedPlace : Place
     {
-        public MarkedPlace(IGraph graph, string name)
+        public IColorSet ColorSet { get; set; }
+
+        public List<Token> Tokens { get; set; }
+        public MarkedPlace(IGraph graph, string name, uint tokensCount)
             : base(graph, name)
         {
-            tokenCount = 0;
+            this.Tokens = new List<Token>();
+            //this.Tokens.Add(new Token(new UnitColorSet("token"), "()", tokensCount));
         }
 
         /// <summary>
         /// Количество фишек
         /// </summary>
-        public int TokenCount { get { return tokenCount; } set { if (value >= 0) tokenCount = value; } }
+        public uint TokensCount { get { return (uint)this.Tokens.Count; } }
 
-        private int tokenCount;
+        /// <summary>
+        /// Удаление фишек из позиции
+        /// </summary>
+        /// <param name="tokens"></param>
+        public void RemoveTokens(Token[] tokens)
+        {
+            foreach (var token in tokens)
+            {
+                this.Tokens.Remove(token);
+            }
+        }
+
+        public void AddTokens(Token[] tokens)
+        {
+            foreach (var token in tokens)
+            {
+                this.Tokens.Add(token);
+            }
+        }
     }
 }

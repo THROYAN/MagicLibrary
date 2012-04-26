@@ -10,7 +10,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
     [Serializable]
     public class MarkedPetriGraph : PetriNetGraph
     {
-        private int currentTokenCount;
+        private uint currentTokenCount;
         public MarkedPetriGraph()
             : base()
         {
@@ -23,10 +23,10 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         {
             return this.addToSecond
                         ? new Transition(this, vertexValue.ToString()) as IVertex
-                        : new MarkedPlace(this, vertexValue.ToString()) { TokenCount = this.currentTokenCount } as IVertex;
+                        : new MarkedPlace(this, vertexValue.ToString(), this.currentTokenCount) as IVertex;
         }
 
-        public void AddPlace(string name, int tokenCount)
+        public void AddPlace(string name, uint tokenCount)
         {
             currentTokenCount = tokenCount;
             AddPlace(name);

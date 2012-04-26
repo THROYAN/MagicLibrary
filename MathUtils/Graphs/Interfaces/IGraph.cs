@@ -74,6 +74,7 @@ namespace MagicLibrary.MathUtils.Graphs
         IEdge GetEdge(Predicate<IEdge> match);
         List<IEdge> GetEdges(Predicate<IEdge> match);
         List<IEdge> GetEdges();
+        List<IEdge> GetEdges(object v);
 
         /// <summary>
         /// Создание вершины соотвествующей типу текущего графа.
@@ -181,6 +182,14 @@ namespace MagicLibrary.MathUtils.Graphs
         void GraphMerge(IGraph graph);
 
         IGraph GetMergedCopy(IGraph graph);
+
+        /// <summary>
+        /// Возвращает путь между двумя вершинами.
+        /// </summary>
+        /// <param name="from">Начало пути</param>
+        /// <param name="to">Конец пути</param>
+        /// <returns></returns>
+        IEdge[] FindPath(object from, object to);
     }
 
     public class VerticesModifiedEventArgs : EventArgs
