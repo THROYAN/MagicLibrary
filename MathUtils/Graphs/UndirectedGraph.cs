@@ -259,21 +259,28 @@ namespace MagicLibrary.MathUtils.Graphs
 
         public virtual object Clone()
         {
-            return new UndirectedGraph()
-            {
-                edges = this.edges.ToList(),
-                vertices = this.vertices.ToList()
-            };
+            UndirectedGraph g = new UndirectedGraph();
+            this.CopyTo(g);
+            return g;
         }
 
         public virtual void CopyTo(IGraph graph)
         {
+            var g = graph as UndirectedGraph;
+            g.edges = new List<IEdge>();
+            g.vertices = new List<IVertex>();
 
-            (graph as UndirectedGraph).edges = new List<IEdge>(this.edges);
-            (graph as UndirectedGraph).vertices = new List<IVertex>(this.vertices);
+            this.GetVertices().ForEach(v => g.vertices.Add(v.Clone() as IVertex));
+            this.GetEdges().ForEach(e => g.edges.Add(e.Clone() as IEdge));
 
             graph.GetVertices().ForEach(v => v.Graph = graph);
-            graph.GetEdges().ForEach(e => e.Graph = graph);
+            graph.GetEdges().ForEach(delegate(IEdge e)
+            {
+                e.Vertices[0] = graph[e.Vertices[0].Value];
+                e.Vertices[1] = graph[e.Vertices[1].Value];
+                e.Graph = graph;
+                //e => e.Graph = graph
+            });
             //graph.GraphMerge(this);
             
         }
@@ -329,6 +336,40 @@ namespace MagicLibrary.MathUtils.Graphs
         public virtual IEdge CreateEdge(object u, object v)
         {
             return new Edge(this, u, v);
+        }
+
+
+        public virtual IEdge[] FindPath(object from, object to)
+        {
+            return this.findPath(from, to, null);
+        }
+
+        private IEdge[] findPath(object from, object to, IEdge[] path)
+        {
+            if (from.Equals(to))
+            {
+                return path;
+            }
+            foreach (var e in this.GetEdges(from))
+            {
+                if (path == null || !path.Contains(e))
+                {
+                    List<IEdge> newPath = new List<IEdge>();
+                    if (path != null)
+                        newPath = new List<IEdge>(path);
+                    newPath.Add(e);
+                    object newFrom = e.Vertices[0].Value.Equals(from) ? e.Vertices[1].Value : e.Vertices[0].Value;
+                    var res = this.findPath(newFrom, to, newPath.ToArray());
+                    if (res != null)
+                        return res;
+                }
+            }
+            return null;
+        }
+
+        public List<IEdge> GetEdges(object v)
+        {
+            return this.GetEdges(e => e.Vertices[0].Value.Equals(v) || e.Vertices[1].Value.Equals(v));
         }
     }
 }

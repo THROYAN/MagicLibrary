@@ -11,7 +11,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
     [Serializable]
     public class MarkedPlace : Place
     {
-        public IColorSet ColorSet { get; set; }
+        public ColorSet ColorSet { get; set; }
 
         public List<Token> Tokens { get; set; }
         public MarkedPlace(IGraph graph, string name, uint tokensCount)

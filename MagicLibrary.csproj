@@ -76,6 +76,9 @@
     <Compile Include="MathUtils\OptimisationMethods\MinimisationMethods.cs" />
     <Compile Include="MathUtils\OptimisationMethods\SecondOrderMethods.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\ColorSet.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\ColorSetCollection.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\ColouredPetriNet.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\Graphs\ColouredPlace.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\ColouredPetriGraph.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\MarkedPetriGraph.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\MarkedPlace.cs" />
