@@ -59,7 +59,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
 
             for (int i = 0; i < this.Marking.Length; i++)
             {
-                string marking = this.Marking[i] == -1 ? "w" : this.Marking[i].ToString();
+                string marking = this.Marking[i] == w ? "w" : this.Marking[i].ToString();
                 sb.Append(i < this.Marking.Length - 1 ? marking + "," : marking);
             }
             sb.AppendFormat("]_{0}",this.Status.ToString());

@@ -279,7 +279,6 @@ namespace MagicLibrary.MathUtils.Graphs
                 e.Vertices[0] = graph[e.Vertices[0].Value];
                 e.Vertices[1] = graph[e.Vertices[1].Value];
                 e.Graph = graph;
-                //e => e.Graph = graph
             });
             //graph.GraphMerge(this);
             

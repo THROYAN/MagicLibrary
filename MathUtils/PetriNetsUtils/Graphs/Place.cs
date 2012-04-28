@@ -18,6 +18,12 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
          */
         public Place(IGraph graph, string name) : base(graph,name) { }
 
+        public string Name
+        {
+            get { return this.Value.ToString(); }
+            set { this.Value = value; }
+        }
+
         //public override void Draw(Graphics g, Pen p)
         //{
         //    base.Draw(g, p);

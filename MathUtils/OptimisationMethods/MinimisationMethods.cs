@@ -51,7 +51,7 @@ namespace MagicLibrary.MathUtils.OptimisationMethods
             Function Sm = new Function();
             Function Sp = new Function();
             qm.ForEach(qi => Sm += qi.Pow(2));
-            qp.ForEach(qi => Sp += qi.AddFunction(new FunctionSlice()).Pow(2));
+            qp.ForEach(qi => Sp += qi.AddFunction(new SliceFunction()).Pow(2));
             Function P = new Variable("rk") / 2.0 * (Sm + Sp);
 
             x.Add(x0);
