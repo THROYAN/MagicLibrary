@@ -17,29 +17,29 @@ namespace MagicLibrary.MathUtils
                 {
                     return 1;
                 }
-                var pF = this.Functions.Last() as Power;//.Find(f => f is Power);
+                var pF = this.Functions.Last() as PowerFunction;//.Find(f => f is Power);
                 if (pF == null)
                 {
                     return 1;
                 }
-                return (pF as Power).Value;
+                return (pF as PowerFunction).Value;
             }
             set
             {
                 if (this.Functions.Count == 0)
                 {
-                    this.Functions.Add(new Power(value));
+                    this.Functions.Add(new PowerFunction(value));
                     return;
                 }
 
-                var pF = this.Functions.Last() as Power;//.Find(f => f is MathFunctions.Power);
+                var pF = this.Functions.Last() as PowerFunction;//.Find(f => f is MathFunctions.Power);
                 if (pF == null)
                 {
-                    this.Functions.Add(new Power(value));
+                    this.Functions.Add(new PowerFunction(value));
                 }
                 else
                 {
-                    (pF as Power).Value = value;
+                    (pF as PowerFunction).Value = value;
                 }
             }
         }
@@ -178,6 +178,11 @@ namespace MagicLibrary.MathUtils
             return base.Equals(obj);
         }
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public List<IMathFunction> Functions { get; set; }
 
         public double Calculate(double d)
@@ -201,7 +206,7 @@ namespace MagicLibrary.MathUtils
             var temp = varName;
 
             int powers = 0;
-            if (this.Functions.Last() is Power)
+            if (this.Functions.Last() is PowerFunction)
             {
                 powers = 1;
             }
@@ -228,7 +233,7 @@ namespace MagicLibrary.MathUtils
         {
             string s = this.ToMathMLShort();
             
-            Power p = new Power(this.Degree);
+            PowerFunction p = new PowerFunction(this.Degree);
 
             return String.Format("<math xmlns='http://www.w3.org/1998/Math/MathML'><mrow>{0}</mrow></math>", p.FormatStringML(s));
         }
@@ -247,7 +252,7 @@ namespace MagicLibrary.MathUtils
             var temp = varName;
 
             int powers = 0;
-            if (this.Functions.Last() is Power)
+            if (this.Functions.Last() is PowerFunction)
             {
                 powers = 1;
             }

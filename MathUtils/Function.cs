@@ -4,19 +4,30 @@ using System.Linq;
 using System.Text;
 
 using MagicLibrary.MathUtils.MathFunctions;
+using System.Text.RegularExpressions;
 
 namespace MagicLibrary.MathUtils
 {
     public class Function : FunctionElement
     {
+        public static List<IMathFunction> AllFunctions = new List<IMathFunction>()
+        {
+
+        };
+
         private List<VariablesMulriplication> variables;
 
         public Function(double constant = 0, string varName = "", double degree = 1)
         {
-            variables = new List<VariablesMulriplication>();
+            this.variables = new List<VariablesMulriplication>();
             this.Functions = new List<MathFunctions.IMathFunction>();
             this.Degree = degree;
             this.AddVariablesMul(new VariablesMulriplication(new Variable(varName, degree), constant));
+        }
+
+        public Function(string func)
+        {
+            this.ReplaceThisByElement(Function.FromString(func));
         }
 
         public Function(VariablesMulriplication v, double degree = 1)
@@ -40,6 +51,11 @@ namespace MagicLibrary.MathUtils
 
         public Function(FunctionElement el)
         {
+            this.ReplaceThisByElement(el);
+        }
+
+        public void ReplaceThisByElement(FunctionElement el)
+        {
             this.variables = new List<VariablesMulriplication>();
             this.Functions = new List<MathFunctions.IMathFunction>();
             if (el is Variable)
@@ -51,6 +67,113 @@ namespace MagicLibrary.MathUtils
                 this.variables = new List<VariablesMulriplication>((el as Function).variables);
                 el.Functions.ForEach(f => this.Functions.Add(f.Clone() as IMathFunction));
             }
+        }
+
+        public static Function FromString(string func)
+        {
+            string f = func;
+            string mask = @"\(\s*(?<function>.+)\s*\)";
+
+            var m = Regex.Match(f, mask);
+
+            List<Function> fs = new List<Function>();
+
+            // Все скобки заменяем на ссылки на функции
+            while (m.Success)
+            {
+                f = f.Replace(m.Value, String.Format("[f{0}]", fs.Count));
+                fs.Add(new Function(m.Groups["function"].Value));
+
+                m = Regex.Match(f, mask);
+            }
+
+            return Function._fromStringWitoutBracers(f, fs);
+        }
+
+        private static Function _fromStringWitoutBracers(string func, List<Function> fs)
+        {
+            string f = func.Trim();
+
+            string mask = @"^\[f(?<index>\d+)\]$";
+            var m = Regex.Match(f, mask);
+
+            if (m.Success)
+            {
+                return fs[Int32.Parse(m.Groups["index"].Value)];
+            }
+
+            // Plus
+            mask = @"(?<first>.+)\+(?<second>.+)";
+
+            m = Regex.Match(f, mask);
+
+            if (m.Success)
+            {
+                return Function._fromStringWitoutBracers(m.Groups["first"].Value, fs) + Function._fromStringWitoutBracers(m.Groups["second"].Value, fs);
+            }
+
+            // Minus
+            mask = @"(?<first>.+)\-(?<second>.+)";
+
+            m = Regex.Match(f, mask);
+
+            if (m.Success)
+            {
+                return Function._fromStringWitoutBracers(m.Groups["first"].Value, fs) - Function._fromStringWitoutBracers(m.Groups["second"].Value, fs);
+            }
+
+            // Multiply
+            mask = @"(?<first>.+)\*(?<second>.+)";
+
+            m = Regex.Match(f, mask);
+
+            if (m.Success)
+            {
+                return Function._fromStringWitoutBracers(m.Groups["first"].Value, fs) * Function._fromStringWitoutBracers(m.Groups["second"].Value, fs);
+            }
+
+            // Divide
+            mask = @"(?<first>.+)/(?<second>.+)";
+
+            m = Regex.Match(f, mask);
+
+            if (m.Success)
+            {
+                return Function._fromStringWitoutBracers(m.Groups["first"].Value, fs) / Function._fromStringWitoutBracers(m.Groups["second"].Value, fs);
+            }
+
+            // Power
+            mask = @"(?<first>.+)\^\s*(?<second>\d+(\.\d+)?)";
+
+            m = Regex.Match(f, mask);
+
+            if (m.Success)
+            {
+
+                return new Function(Function._fromStringWitoutBracers(m.Groups["first"].Value, fs).Pow(Double.Parse(m.Groups["second"].Value)));
+            }
+
+            // Digit
+            mask = @"^\s*(?<value>\d+(\.\d+)?)\s*$";
+
+            m = Regex.Match(f, mask);
+
+            if (m.Success)
+            {
+                return new Function(Double.Parse(m.Groups["value"].Value));
+            }
+
+            // Variable
+            mask = @"^\s*(?<var>\w+\.*)\s*$";
+
+            m = Regex.Match(f, mask);
+
+            if (m.Success)
+            {
+                return new Function(1, m.Groups["var"].Value);
+            }
+
+            throw new Exception("Invalid function string");
         }
 
         public void AddVariablesMul(VariablesMulriplication variablesMulriplication)
@@ -70,7 +193,7 @@ namespace MagicLibrary.MathUtils
                     //this.variables.Add(variablesMulriplication);
                     //(this + variablesMulriplication.ToFunction()).CopyTo(this);
                     var func = variablesMulriplication.ToFunction();
-                    if (func.Functions.Exists(f => !(f is Power)) || func.Degree != 1)
+                    if (func.Functions.Exists(f => !(f is PowerFunction)) || func.Degree != 1)
                     {
                         this.variables.Add(variablesMulriplication);
                     }
@@ -768,7 +891,7 @@ namespace MagicLibrary.MathUtils
         {
             string s = this.ToMathMLShort();
 
-            Power p = new Power(this.Degree);
+            PowerFunction p = new PowerFunction(this.Degree);
 
             return String.Format("<math xmlns='http://www.w3.org/1998/Math/MathML'><mrow>{0}</mrow></math>", p.FormatStringML(s));
         }

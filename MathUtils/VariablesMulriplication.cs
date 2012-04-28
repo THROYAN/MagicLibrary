@@ -29,7 +29,7 @@ namespace MagicLibrary.MathUtils
 
         public VariablesMulriplication AddVariable(FunctionElement variable)
         {
-            if (this.HasVariable(variable.Name) && !variable.Functions.Exists(f => !(f is MagicLibrary.MathUtils.MathFunctions.Power)))
+            if (this.HasVariable(variable.Name) && !variable.Functions.Exists(f => !(f is MagicLibrary.MathUtils.MathFunctions.PowerFunction)))
             {
                 this.GetVariableByName(variable.Name).Degree += variable.Degree;
             }
@@ -283,9 +283,7 @@ namespace MagicLibrary.MathUtils
                 return "0";
 
             StringBuilder sb = new StringBuilder();
-            //this.variables.Sort(new Comparison<FunctionElement>((v1, v2) => Convert.ToInt32(v1.Degree - v2.Degree)));
-
-            bool first = true;
+            
             int upCount = 0, downCount = 0;
             StringBuilder upSB = new StringBuilder();
             StringBuilder downSB = new StringBuilder();
@@ -689,7 +687,7 @@ namespace MagicLibrary.MathUtils
 
         private string getVarMLString(FunctionElement e, bool needBrackets = true)
         {
-            MagicLibrary.MathUtils.MathFunctions.Power p = new MathFunctions.Power(e.Degree);
+            MagicLibrary.MathUtils.MathFunctions.PowerFunction p = new MathFunctions.PowerFunction(e.Degree);
             var format = p.FormatPower();
             var name = e.ToMathMLShort();
 
