@@ -9,18 +9,18 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
 {
     public class ColouredPetriGraph : PetriNetGraph
     {
-        private ColorSetCollection colors { get; set; }
+        public ColorSetCollection Colors { get; private set; }
 
         public ColouredPetriGraph(ColorSetCollection colors = null)
             : base()
         {
             if (colors == null)
             {
-                this.colors = new ColorSetCollection();
+                this.Colors = new ColorSetCollection();
             }
             else
             {
-                this.colors = colors;
+                this.Colors = colors;
             }
         }
 
@@ -28,7 +28,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         {
             return this.addToSecond
                         ? new Transition(this, vertexValue.ToString()) as IVertex
-                        : new ColouredPlace(this, vertexValue.ToString(), this.colors) as IVertex;
+                        : new ColouredPlace(this, vertexValue.ToString()) as IVertex;
         }
 
         public override void CopyTo(IGraph graph)
@@ -36,7 +36,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             base.CopyTo(graph);
 
             var pGraph = graph as ColouredPetriGraph;
-            pGraph.colors = this.colors;
+            pGraph.Colors = this.Colors;
         }
 
         public override object Clone()
@@ -46,6 +46,18 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             this.CopyTo(g);
 
             return g;
+        }
+
+        /// <summary>
+        /// Сбрасывает маркировка на начальную.
+        /// У каждой позиции - это функция инициализации.
+        /// </summary>
+        public void ResetMarking()
+        {
+            foreach (ColouredPlace place in this.GetVertices())
+            {
+                place.ResetMarking();
+            }
         }
     }
 }

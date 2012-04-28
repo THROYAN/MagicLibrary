@@ -53,13 +53,12 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
 
             int i = 0;
             // If marking[i] == w then set it very big integer
-            //places.ForEach(p =>
-            //    (p as MarkedPlace).SetTokenCount(
-            //            marking[i++] != MarkingTreeNode.w ?
-            //                marking[i - 1]
-            //                : UInt32.MaxValue)
-            //);
-#warning !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            places.ForEach(p =>
+                (p as MarkedPlace).TokensCount =
+                        marking[i++] != MarkingTreeNode.w ?
+                            marking[i - 1]
+                            : UInt32.MaxValue
+            );
         }
 
         /// <summary>
@@ -96,7 +95,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         }
 
         /// <summary>
-        /// Function of execute transition in special marking
+        /// Function of execute the transition in a special marking
         /// State of the net won't change
         /// </summary>
         /// <param name="marking"></param>

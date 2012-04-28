@@ -45,7 +45,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
 
         public ColorSetCollection Collection { get; private set; }
 
-#warning Запретить изменить распарсенные аттрибуты!
+#warning Запретить изменение распарсенных аттрибутов!
         /// <summary>
         /// Аттрибуты, выделенные из строки аттрибутов
         /// </summary>
@@ -75,66 +75,53 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         public const string FalseDefault = "false";
         #endregion
 
-        public ColorSet(string name, ColorSetType type, ColorSetCollection collection, string attrs = "")
+        private static Dictionary<string, ColorSetType> typeNames = new Dictionary<string, ColorSetType>()
+            {
+                { "unit", ColorSetType.Unit },
+                { "int", ColorSetType.Int },
+                { "bool", ColorSetType.Bool },
+                { "string", ColorSetType.String },
+                { "index", ColorSetType.Index },
+                { "record", ColorSetType.Record },
+                { "enum", ColorSetType.Enum },
+            };
+
+        public ColorSet(string name, ColorSetType type, ColorSetCollection colors, string attrs = "")
         {
             this.Name = name;
             this.type = type;
             this.attrs = attrs;
-            this.Collection = collection;
-            this.Collection.AddColorSet(this);
-
+            this.Collection = colors;
+            
             this.ParseAttributes();
+            this.Collection.AddColorSet(this);
         }
 
-        /// <summary>
-        /// Парсинг аттрибута из строки, содержащей 1 аттрибут.
-        /// 1) Имя=Значение
-        /// 2) Значение
-        /// 3) Имя = 'Значение'
-        /// 4) Имя: "Значение"
-        /// ...
-        /// </summary>
-        /// <param name="attr">Аттрибут, в виде строки</param>
-        /// <returns>Пара - имя и значение аттрибута</returns>
-        KeyValuePair<string, string> parseAttribute(string attr)
+        public ColorSet(string colorSetDescription, ColorSetCollection colors)
         {
-            if (Regex.IsMatch(attr, @"^\s?$"))
+            string[] masks = new string[]
             {
-                return new KeyValuePair<string,string>("", "");
-            }
-            string[] patterns = new string[] {
-                @"^\s*(?<name>\w.*)\s*[=:]\s*(?<value>\w.*)\s*$", // Name = asd2
-                @"^\s*(?<name>\w.*)\s*[=:]\s*(?<value>-?\d+)\s*$", // MinLength = 12
-                "^\\s*(?<name>\\w.*)\\s*[=:]\\s*\"(?<value>.+)\"\\s*$", // Name ="+asd"
-                @"^\s*(?<name>\w.*)\s*[=:]\s*'(?<value>.+)'\s*$", // name = '2asd'
-                @"^\s*'(?<value>.+)'\s*$", // 'asd2'
-                "^\\s*\"(?<value>.+)\"\\s*$", // "asd2"
-                @"^\s*(?<value>-?\d+)\s*$", // 15
-                @"^\s*(?<value>.+)\s*$", // asd2
+                //@"^(?<name>\w.*)\s*=\s*(?<type>\w+)$",
+                @"^\s*(?<name>\w.*)\s*=\s*(?<type>\w+)\((?<attrs>.*)\)\s*$"
             };
+
             Match m = null;
-            foreach (var pattern in patterns)
+
+            foreach (var mask in masks)
             {
-                m = Regex.Match(attr, pattern);
-                if (m.Success)
-                {
-                    break;
-                }
+                m = Regex.Match(colorSetDescription, mask);
             }
-
-            if (m == null || !m.Success)
+            if (m == null || !m.Success || !ColorSet.typeNames.ContainsKey(m.Groups["type"].Value))
             {
-                throw new InvalidAttributesException(attr, this.Name);
+                throw new InvalidColorSetAttributesException("NewColorSet()", colorSetDescription);
             }
-
-            string name = m.Groups["name"].Value.Trim();
-
-            if (name == null)
-            {
-                name = "";
-            }
-
-            return new KeyValuePair<string, string>(name, m.Groups["value"].Value.Trim());
+            this.Name = m.Groups["name"].Value.Trim();
+            this.type = ColorSet.typeNames[m.Groups["type"].Value];
+            this.attrs = m.Groups["attrs"].Value;
+            this.Collection = colors;
+            
+            this.ParseAttributes();
+            this.Collection.AddColorSet(this);
         }
 
         /// <summary>
@@ -217,13 +204,158 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         }
 
         /// <summary>
+        /// Парсинг аттрибута из строки, содержащей 1 аттрибут.
+        /// 1) Имя=Значение
+        /// 2) Значение
+        /// 3) Имя = 'Значение'
+        /// 4) Имя: "Значение"
+        /// ...
+        /// </summary>
+        /// <param name="attr">Аттрибут, в виде строки</param>
+        /// <returns>Пара - имя и значение аттрибута</returns>
+        KeyValuePair<string, string> parseAttribute(string attr)
+        {
+            if (Regex.IsMatch(attr, @"^\s?$"))
+            {
+                return new KeyValuePair<string, string>("", "");
+            }
+            string[] patterns = new string[] {
+                "^\\s*(?<name>\\w.*)\\s*[=:]\\s*\"(?<value>.+)\"\\s*$", // Name ="+asd"
+                @"^\s*(?<name>\w.*)\s*[=:]\s*'(?<value>.+)'\s*$", // name = '2asd'
+                @"^\s*(?<name>\w.*)\s*[=:]\s*(?<value>\w.*)\s*$", // Name = asd2
+                @"^\s*(?<name>\w.*)\s*[=:]\s*(?<value>-?\d+)\s*$", // MinLength = -12
+                "^\\s*\"(?<value>.+)\"\\s*$", // "asd2"
+                @"^\s*'(?<value>.+)'\s*$", // 'asd2'
+                @"^\s*(?<value>-?\d+)\s*$", // 15
+                @"^\s*(?<value>.+)\s*$", // asd2
+            };
+            Match m = null;
+            foreach (var pattern in patterns)
+            {
+                m = Regex.Match(attr, pattern);
+                if (m.Success)
+                {
+                    break;
+                }
+            }
+
+            if (m == null || !m.Success)
+            {
+                throw new InvalidAttributesException(attr, this.Name);
+            }
+
+            string name = m.Groups["name"].Value.Trim();
+
+            if (name == null)
+            {
+                name = "";
+            }
+
+            return new KeyValuePair<string, string>(name, m.Groups["value"].Value.Trim());
+        }
+
+        /// <summary>
+        /// Разбиение строки аттрибутов, на строки, содержащие по одному аттрибуту
+        /// </summary>
+        /// <param name="attrs">Строка аттрибутов</param>
+        /// <returns>Массив строк аттрибутов</returns>
+        private string[] parseAttributes(string attrs)
+        {
+            var ss = Regex.Split(attrs, @"\\,");
+
+            if (ss.Length == 1)
+            {
+                return attrs.Split(',');
+            }
+
+            List<string> result = new List<string>();
+
+            for (int i = 0; i < ss.Length; i++)
+            {
+                var ss2 = this.parseAttributes(ss[i]);
+
+                if (i != 0)
+                {
+                    result[result.Count - 1] = result.Last() + "," + ss2[0];
+                    for (int j = 1; j < ss2.Length; j++)
+                    {
+                        result.Add(ss2[j]);
+                    }
+                }
+                else
+                {
+                    result.AddRange(ss2);
+                }
+            }
+            return result.ToArray();
+        }
+
+        /// <summary>
         /// Обновление аттрибутов для текущего цвета.
         /// </summary>
         public void ParseAttributes()
         {
-            this.ParsedAttributes = ParseAttributes(this.Attributes);
+            try
+            {
+                this.ParsedAttributes = ParseAttributes(this.Attributes);
+            }
+            catch (InvalidAttributesException ae)
+            {
+                throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
+            }
 
             this.ConvertAttributes();
+        }
+
+        /// <summary>
+        /// Парсинг аттрибутов из строки аттрибутов.
+        /// Аттрибуты записываются через ','.
+        /// </summary>
+        /// <param name="attrs">Аттрибуты в виде строки</param>
+        /// <returns>Словарь, где ключи - это имена аттрибутов, а значения - это значения аттрибутов.</returns>
+        public Dictionary<string, string> ParseAttributes(string attrs)
+        {   
+            Dictionary<string, string> d = new Dictionary<string, string>();
+            if (Regex.IsMatch(attrs, @"^\s?$"))
+                return d;
+            
+            var pAttrs = parseAttributes(attrs);
+
+            int i = 0, j = 0;
+            foreach (var attr in pAttrs)
+            {
+                var pAttr = parseAttribute(attr);
+
+                // array attrs
+                if (pAttr.Key == "")
+                {
+                    // Если где-то в середине был именованный аттрибут, то это плохо
+                    if (i != j)
+                    {
+                        throw new InvalidAttributesException(attrs, this.Name);
+                    }
+                    d.Add(this.KeyOfIndex(++i), pAttr.Value);
+                }
+                else
+                {
+                    // Если был массив, а тут появился именованный аттрибут
+                    if (i != 0)
+                    {
+                        throw new InvalidAttributesException(attrs, this.Name);
+                    }
+
+                    // Повторяющиеся аттрибуты - это лажа
+                    if(d.ContainsKey(pAttr.Key))
+                    {
+                        throw new InvalidAttributesException(attrs, this.Name);
+                    }
+
+                    d.Add(pAttr.Key, pAttr.Value);
+                }
+                j++;
+            }
+
+            return d;
         }
 
         /// <summary>
@@ -411,7 +543,8 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                                 }
                             }
                             break;
-                        case 3: case 4:
+                        case 3:
+                        case 4:
                             // Должны быть заданы только именованные аттрибуты
                             if (!this.FillNoneAttributes(this.ParsedAttributes.Keys.Count, ColorSet.FromStringAttribute, ColorSet.ToStringAttribute, ColorSet.MinLengthAttribute, ColorSet.MaxLengthAttribute))
                             {
@@ -521,7 +654,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                         default:
                             throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
                     }
-                    
+
                     break;
                 case ColorSetType.Record:
 
@@ -539,67 +672,6 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
 
                     break;
             }
-        }
-
-        /// <summary>
-        /// Парсинг аттрибутов из строки аттрибутов.
-        /// Аттрибуты записываются через ','.
-        /// </summary>
-        /// <param name="attrs">Аттрибуты в виде строки</param>
-        /// <returns>Словарь, где ключи - это имена аттрибутов, а значения - это значения аттрибутов.</returns>
-        public Dictionary<string, string> ParseAttributes(string attrs)
-        {   
-            Dictionary<string, string> d = new Dictionary<string, string>();
-            if (Regex.IsMatch(attrs, @"^\s?$"))
-                return d;
-            
-            var pAttrs = parseAttributes(attrs);
-
-            int i = 0, j = 0;
-            foreach (var attr in pAttrs)
-            {
-                var pAttr = parseAttribute(attr);
-
-                // array attrs
-                if (pAttr.Key == "")
-                {
-                    // Если где-то в середине был именованный аттрибут, то это плохо
-                    if (i != j)
-                    {
-                        throw new InvalidAttributesException(attrs, this.Name);
-                    }
-                    d.Add(this.KeyOfIndex(++i), pAttr.Value);
-                }
-                else
-                {
-                    // Если был массив, а тут появился именованный аттрибут
-                    if (i != 0)
-                    {
-                        throw new InvalidAttributesException(attrs, this.Name);
-                    }
-
-                    // Повторяющиеся аттрибуты - это лажа
-                    if(d.ContainsKey(pAttr.Key))
-                    {
-                        throw new InvalidAttributesException(attrs, this.Name);
-                    }
-
-                    d.Add(pAttr.Key, pAttr.Value);
-                }
-                j++;
-            }
-
-            return d;
-        }
-
-        /// <summary>
-        /// Разбиение строки аттрибутов, на строки, содержащие по одному аттрибуту
-        /// </summary>
-        /// <param name="attrs">Строка аттрибутов</param>
-        /// <returns>Массив строк аттрибутов</returns>
-        private string[] parseAttributes(string attrs)
-        {
-            return attrs.Split(',');
         }
 
         /// <summary>
@@ -715,24 +787,106 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        public string Constructor(Token token)
+        public string ShowToken(Token token)
         {
-            if (this.IsLegal(token))
+            if (!this.IsLegal(token))
             {
-                var attrs = this.ParseAttributes(token.Value);
-                switch (this.Type)
-                {
-                    case ColorSetType.Unit:
-
-                        //if (attrs.ContainsKey("[1]") && attrs["[1]"])
-
-                        break;
-                }
+                throw new InvalidTokenException(token.Value, this.Name);
             }
 
-            throw new InvalidTokenException(token.Value, this.Name);
+            var attrs = this.ParseAttributes(token.Value);
+            switch (this.Type)
+            {
+                case ColorSetType.Unit:
+
+                    return this.ParsedAttributes[ColorSet.NameAttribute];
+
+                case ColorSetType.Int:
+
+                    int val;
+                    // не обязательная проверка, но всё же
+                    if (!Int32.TryParse(token.Value, out val))
+                    {
+                        throw new InvalidTokenException(token.Value, this.Name);
+                    }
+                    return val.ToString();
+
+                case ColorSetType.Bool:
+
+                    if (token.Value.Equals(this.ParsedAttributes[ColorSet.TrueStringAttribute]) ||
+                        token.Value.Equals(ColorSet.TrueDefault))
+                    {
+                        return this.ParsedAttributes[ColorSet.TrueStringAttribute];
+                    }
+                    else
+                    {
+                        // Если isLegal проходит, значит можно точно вернуть это значение
+                        return this.ParsedAttributes[ColorSet.FalseStringAttribute];
+                    }
+
+                case ColorSetType.Enum:
+                case ColorSetType.Index:
+
+                    return token.Value;
+
+                case ColorSetType.String:
+
+                    return String.Format("'{0}'", token.Value);
+
+                case ColorSetType.Record:
+
+                    StringBuilder sb = new StringBuilder();
+                    int i = 0;
+                    foreach (var item in this.ParseAttributes(token.Value))
+                    {
+                        i++;
+                        Token t = new Token(item.Value);
+                        ColorSet color = this.Collection[this.ParsedAttributes[item.Key]];
+
+                        sb.AppendFormat("[{0}] => {1}, ", item.Key, color.ShowToken(t));
+                    }
+                    sb.Remove(sb.Length - 2, 2);
+
+                    return String.Format("({0})", sb.ToString());
+
+                default:
+
+                    throw new InvalidTokenException(token.Value, this.Name);
+            }
+        }
+
+        public override string ToString()
+        {
+            return String.Format("{0} = {1}({2})", this.Name, this.GetTypeName(), this.Attributes);
+        }
+
+        /// <summary>
+        /// Строковое представление типа цвета
+        /// </summary>
+        /// <returns></returns>
+        public string GetTypeName()
+        {
+            foreach (var item in ColorSet.typeNames)
+            {
+                if (item.Value.Equals(this.Type))
+                {
+                    return item.Key;
+                }
+            }
+            return "<undefined type>";
+        }
+
+        public List<Token> GetTokensFromInitFunction(string initFunc)
+        {
+            List<Token> tokens = new List<Token>();
+
+            var sepTokens = initFunc.Split(new[] { "++" }, StringSplitOptions.None);
+            foreach (var token in sepTokens)
+            {
+                tokens.Add(new Token(token));
+            }
+
+            return tokens;
         }
     }
-
-    public enum ColorSetType { Int, String, Enum, Bool, Unit, Index, Record }
 }

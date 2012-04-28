@@ -68,6 +68,9 @@
     <Compile Include="MathUtils\MathFunctions\IMathFunction.cs" />
     <Compile Include="MathUtils\IMatrixElement.cs" />
     <Compile Include="MathUtils\InvalidMatrixSizeException.cs" />
+    <Compile Include="MathUtils\MathFunctions\MathFunction.cs" />
+    <Compile Include="MathUtils\MathFunctions\PowerFunction.cs" />
+    <Compile Include="MathUtils\MathFunctions\SliceFunction.cs" />
     <Compile Include="MathUtils\Matrix.cs" />
     <Compile Include="MathUtils\MatrixElementWithVariables.cs" />
     <Compile Include="MathUtils\Multiset.cs" />
@@ -77,6 +80,7 @@
     <Compile Include="MathUtils\OptimisationMethods\SecondOrderMethods.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\ColorSet.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\ColorSetCollection.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\ColorSetTypes.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\ColouredPetriNet.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\ColouredPlace.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\ColouredPetriGraph.cs" />

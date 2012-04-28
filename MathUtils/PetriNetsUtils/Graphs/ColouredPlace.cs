@@ -18,13 +18,13 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         private ColorSetCollection collection { get; set; }
 
         public ColouredPlace(PetriNetGraph graph, string name, ColorSet color)
-            : this(graph, name, color.Collection, color.Name) { }
+            : this(graph, name, color.Name) { }
 
-        public ColouredPlace(PetriNetGraph graph, string name, ColorSetCollection colors, string colorName = "")
+        public ColouredPlace(PetriNetGraph graph, string name, string colorName = "")
             : base(graph, name)
         {
             this.ColorSetName = colorName;
-            this.collection = colors;
+            this.collection = (this.Graph as ColouredPetriGraph).Colors;
             this.InitTokens = new List<Token>();
             this.Tokens = new List<Token>();
         }
@@ -47,6 +47,25 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             place.ColorSetName = this.ColorSetName;
             place.InitFunction = this.InitFunction;
             place.collection = this.collection;
+        }
+
+        public override object Clone()
+        {
+            ColouredPlace place = new ColouredPlace(this.Graph as ColouredPetriGraph, this.Name);
+
+            this.CopyTo(place);
+            
+            return place;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void ResetMarking()
+        {
+            this.Tokens = new List<Token>();
+
+            
         }
     }
 }
