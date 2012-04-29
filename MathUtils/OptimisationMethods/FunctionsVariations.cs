@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MagicLibrary.MathUtils.Functions;
 
 namespace MagicLibrary.MathUtils.OptimisationMethods
 {

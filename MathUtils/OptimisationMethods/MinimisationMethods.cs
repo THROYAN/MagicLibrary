@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using MagicLibrary.MathUtils.MathFunctions;
+using MagicLibrary.MathUtils.Functions;
 
 namespace MagicLibrary.MathUtils.OptimisationMethods
 {
@@ -51,7 +52,8 @@ namespace MagicLibrary.MathUtils.OptimisationMethods
             Function Sm = new Function();
             Function Sp = new Function();
             qm.ForEach(qi => Sm += qi.Pow(2));
-            qp.ForEach(qi => Sp += qi.AddFunction(new SliceFunction()).Pow(2));
+#warning Врятли без этого оно будет работать
+            //qp.ForEach(qi => Sp += qi.AddFunction(new SliceFunction()).Pow(2));
             Function P = new Variable("rk") / 2.0 * (Sm + Sp);
 
             x.Add(x0);

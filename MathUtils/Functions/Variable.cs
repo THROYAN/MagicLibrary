@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 
 using MagicLibrary.MathUtils.MathFunctions;
+using System.Text.RegularExpressions;
 
-namespace MagicLibrary.MathUtils
+namespace MagicLibrary.MathUtils.Functions
 {
     public class Variable : FunctionElement
     {
@@ -25,11 +26,15 @@ namespace MagicLibrary.MathUtils
         /// </summary>
         /// <param name="name">Name of variable</param>
         /// <param name="degree">Power of variable</param>
-        public Variable(string name, double degree = 1)
+        public Variable(string name)
         {
-            this.Functions = new List<MathFunctions.IMathFunction>();
+            this._initProperties();
             this.name = name;
-            this.Degree = degree;
+        }
+
+        public void _initProperties()
+        {
+            this.MathFunctions = new List<Tuple<IMathFunction, FunctionElement[]>>();
         }
 
         /// <summary>
@@ -56,8 +61,9 @@ namespace MagicLibrary.MathUtils
             if (this.Name.Equals(name))
             {
                 var temp = value.Clone() as FunctionElement;
-                //this.Functions.ForEach(f => temp.Functions.Add(f));
-                temp.Degree *= this.Degree;
+
+                temp.ForceAddFunctions(this);
+
                 return temp;
             }
             return this.Clone() as FunctionElement;
@@ -65,15 +71,10 @@ namespace MagicLibrary.MathUtils
 
         public override string ToString()
         {
-            if (this.Name == "" || this.Degree == 0)
+            if (this.Name == "")
                 return "";
 
-            if (this.Degree < 0)
-                return String.Format("1/{0}{1}",
-                   this.ShowFunctions(this.Name), this.Degree == -1 ? "" : String.Format("^{0}", Math.Abs(this.Degree)));
-
-            return String.Format("{0}{1}",
-                this.ShowFunctions(this.Name), this.Degree == 1 ? "" : String.Format("^{0}", this.Degree));
+            return base.ToString();
         }
 
         /// <summary>
@@ -82,12 +83,14 @@ namespace MagicLibrary.MathUtils
         /// <param name="degree"></param>
         public override FunctionElement Pow(double degree)
         {
-            return new Variable(this.Name, this.Degree * degree);
+            return this.ApplyFunction("power", new Function(degree));
         }
 
         public override object Clone()
         {
-            return new Variable(this.name, this.Degree);
+            Variable v = new Variable(this.name);
+            v.CopyFunctions(this);
+            return v;
         }
         /*
         public static Function _add(Variable var1, Variable var2)
@@ -192,8 +195,9 @@ namespace MagicLibrary.MathUtils
             if (obj is Variable)
             {
                 var v = obj as Variable;
+                
                 return
-                    ((v.Degree == this.Degree && v.Name.Equals(v.Name))) ||
+                    (this.SameMathFunctionsWith(v) && (v.Name.Equals(v.Name))) ||
                         (this.IsConstant() &&
                         (v == null || v.IsConstant()));
             }
@@ -207,14 +211,16 @@ namespace MagicLibrary.MathUtils
 
         public override bool IsConstant()
         {
-            return this.Degree == 0 || this.Name.Equals("");
+            return this.Name.Equals("");
         }
 
         public override VariablesMulriplication Derivative()
         {
             if (this.IsConstant())
                 return new VariablesMulriplication(0);
-            return new VariablesMulriplication(this.Name, this.Degree - 1, this.Degree);
+            throw new Exception();
+#warning варнинг
+            //return new VariablesMulriplication(this.Name, this.Degree - 1, this.Degree);
         }
 
         public override double ToDouble()
@@ -225,8 +231,7 @@ namespace MagicLibrary.MathUtils
             }
             else
             {
-                throw new NotImplementedException();
-                //return 0;
+                throw new Exception();
             }
         }
 
@@ -244,7 +249,7 @@ namespace MagicLibrary.MathUtils
 
         public override bool IsVariableMultiplication()
         {
-            return true;
+            return this.MathFunctions.Count == 0;
         }
 
         public override VariablesMulriplication ToVariableMultiplication()
@@ -255,6 +260,17 @@ namespace MagicLibrary.MathUtils
         public override string ToMathMLShort()
         {
             return this.ShowMLFunctions(this.Name);
+        }
+
+        public static Function ParseFromString(string str)
+        {
+            var mask = @"^(?<var>\w+.*)$";
+            var m = Regex.Match(str, mask, RegexOptions.IgnorePatternWhitespace);
+            if (!m.Success)
+            {
+                throw new Exception();
+            }
+            return new Function(1, m.Groups["var"].Value);
         }
     }
 }

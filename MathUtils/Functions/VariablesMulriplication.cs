@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MagicLibrary.MathUtils
+namespace MagicLibrary.MathUtils.Functions
 {
     public class VariablesMulriplication : ICloneable
     {
@@ -25,13 +25,14 @@ namespace MagicLibrary.MathUtils
         }
         public VariablesMulriplication(FunctionElement variable, double constant = 1) : this(new FunctionElement[] { variable }, constant) { }
         public VariablesMulriplication(double constant = 1) : this(new FunctionElement[] { new Variable("") }, constant) { }
-        public VariablesMulriplication(string name, double degree = 1, double constant = 1) : this(new FunctionElement[] { new Variable(name, degree) }, constant) { }
+        public VariablesMulriplication(string name, double degree = 1, double constant = 1) : this(new FunctionElement[] { new Variable(name).Pow(degree) }, constant) { }
 
         public VariablesMulriplication AddVariable(FunctionElement variable)
         {
-            if (this.HasVariable(variable.Name) && !variable.Functions.Exists(f => !(f is MagicLibrary.MathUtils.MathFunctions.PowerFunction)))
+            if (this.HasVariable(variable.Name) && variable.MathFunctions.Count == 0)
             {
-                this.GetVariableByName(variable.Name).Degree += variable.Degree;
+                var v = this.GetVariableByName(variable.Name);
+                v *= variable;
             }
             else
             {
@@ -87,11 +88,11 @@ namespace MagicLibrary.MathUtils
             vars2.variables.ForEach(delegate(FunctionElement v)
             {
                 var temp = vars.Find(v1 => v1.Name.Equals(v.Name));
-                if (temp != null)
-                {
-                    temp.Degree += v.Degree;
-                }
-                else
+                //if (temp != null)
+                //{
+                //    temp.Degree += v.Degree;
+                //}
+                //else
                 {
                     if (v.IsConstant())
                     {
@@ -251,34 +252,41 @@ namespace MagicLibrary.MathUtils
 
         private string getVarString(FunctionElement e)
         {
-            var degree = Math.Abs(e.Degree);
-            if (degree == 1)
-            {
-                return e.Name;
-            }
-            /*if (degree == 0.5)
-            {
-                return String.Format("sqrt({0})", e.Name);
-            }*/
-            if (e is Variable)
-            {
-                return String.Format("{0}^{1}", e.Name, degree);
-            }
-            else
-            {
-                if ((e as Function).IsNeedBracketsForPower())
-                {
-                    return String.Format("({0})^{1}", e.Name, degree);
-                }
-                else
-                {
-                    return String.Format("{0}^{1}", e.Name, degree);
-                }
-            }
+            //var degree = Math.Abs(e.Degree);
+            //if (degree == 1)
+            //{
+            //    return e.Name;
+            //}
+            ///*if (degree == 0.5)
+            //{
+            //    return String.Format("sqrt({0})", e.Name);
+            //}*/
+            //if (e is Variable)
+            //{
+            //    return String.Format("{0}^{1}", e.Name, degree);
+            //}
+            //else
+            //{
+            //    if ((e as Function).IsNeedBracketsForPower())
+            //    {
+            //        return String.Format("({0})^{1}", e.Name, degree);
+            //    }
+            //    else
+            //    {
+            //        return String.Format("{0}^{1}", e.Name, degree);
+            //    }
+            //}
+            return e.ToString();
         }
 
+        private static int i = 0;
         public override string ToString()
         {
+            VariablesMulriplication.i++;
+            if (VariablesMulriplication.i >= 100)
+            {
+                int saa;
+            }
             if (this.Constant == 0)
                 return "0";
 
@@ -308,50 +316,56 @@ namespace MagicLibrary.MathUtils
                 }
             }
 
+            bool prepNeedBrackets = false;
             foreach (var v in this.variables)
             {
                 if (v.Name != "" && !v.ToString().Equals("1"))
                 {
-                    if (v.Degree < 0)
+                    if (v is Function)
                     {
-                        if (v is Variable)
+                        if ((v as Function).IsNeedBrackets())
                         {
-                            downSB.AppendFormat("{0}*", this.getVarString(v));
-                            downCount++;
-                        }
-                        else
-                        {
-                            if ((v as Function).IsNeedBrackets())
+                            if (upCount == 1)
                             {
-                                downSB.AppendFormat("({0})*", this.getVarString(v));
+                                if (prepNeedBrackets)
+                                {
+                                    upSB = new StringBuilder(String.Format("({0})*({1})*", upSB.Remove(upSB.Length - 1, 1), this.getVarString(v)));
+                                }
+                                else
+                                {
+                                    upSB = new StringBuilder(String.Format("{0}*({1})*", upSB.Remove(upSB.Length - 1, 1), this.getVarString(v)));
+                                }
                             }
                             else
                             {
-                                downSB.AppendFormat("{0}*", this.getVarString(v));
+                                upSB.AppendFormat("({0})*", this.getVarString(v));
                             }
-                            downCount++;
-                        }
-                    }
-                    if (v.Degree > 0)
-                    {
-                        if (v is Variable)
-                        {
-                            upSB.AppendFormat("{0}*", this.getVarString(v));
-                            upCount++;
                         }
                         else
                         {
-                            if ((v as Function).IsNeedBrackets())
+                            if (upCount == 1)
                             {
-                                upSB.AppendFormat("({0})*", this.getVarString(v));
+                                if (prepNeedBrackets)
+                                {
+                                    upSB = new StringBuilder(String.Format("({0})*{1}*", upSB.Remove(upSB.Length - 1, 1), this.getVarString(v)));
+                                }
+                                else
+                                {
+                                    upSB = new StringBuilder(String.Format("{0}*{1}*", upSB.Remove(upSB.Length - 1, 1), this.getVarString(v)));
+                                }
                             }
                             else
                             {
                                 upSB.AppendFormat("{0}*", this.getVarString(v));
                             }
-                            upCount++;
+
                         }
                     }
+                    else
+                    {
+                        upSB.AppendFormat("{0}*", this.getVarString(v));
+                    }
+                    upCount++;
                 }
             }
 
@@ -464,7 +478,7 @@ namespace MagicLibrary.MathUtils
         /// <returns></returns>
         public bool HasVariable(string name)
         {
-            return this.Variables.Contains(name);
+            return this.variables.Exists(v => v.HasVariable(name));
             //return this.variables.Exists(v => v.Name.Equals(name) && v.IsVariable());
         }
 
@@ -476,7 +490,10 @@ namespace MagicLibrary.MathUtils
         /// <returns></returns>
         public bool HasVariable(string name, double degree)
         {
-            return this.variables.Exists(v => v.Name.Equals(name) && v.Degree == degree);
+            return this.variables.Exists(v => v.Name.Equals(name) &&
+                v.MathFunctions.Last().Item1.Equals(Function.GetMathFunction("power")) &&
+                v.MathFunctions.Last().Item2[0].IsConstant() &&
+                v.MathFunctions.Last().Item2[0].ToDouble() == degree);
         }
 
         /// <summary>
@@ -488,7 +505,7 @@ namespace MagicLibrary.MathUtils
         /// <returns></returns>
         public Function SetVariableValue(string name, double value)
         {
-            return this.SetVariableValue(name, new Variable("", value));
+            return this.SetVariableValue(name, new Function(value));
         }
 
         public Function SetVariableValue(string name, FunctionElement value)
@@ -551,76 +568,77 @@ namespace MagicLibrary.MathUtils
 
         public VariablesMulriplication Derivative(string name)
         {
-            if (this.HasVariable(name))
-            {
-                VariablesMulriplication vs = new VariablesMulriplication(this.Constant);
-                VariablesMulriplication upWithVar = null;
-                VariablesMulriplication downWithVar = null;
+#warning Печалька...
+            //if (this.HasVariable(name))
+            //{
+            //    VariablesMulriplication vs = new VariablesMulriplication(this.Constant);
+            //    VariablesMulriplication upWithVar = null;
+            //    VariablesMulriplication downWithVar = null;
 
-                this.variables.ForEach(delegate(FunctionElement v)
-                {
-                    var temp = v.Clone() as FunctionElement;
-                    if (temp.HasVariable(name))
-                    {
-                        if (temp.Degree < 0)
-                        {
-                            if (downWithVar != null)
-                            {
-                                downWithVar.AddVariable(temp);
-                            }
-                            else
-                            {
-                                downWithVar = new VariablesMulriplication(temp);
-                            }
-                        }
-                        else
-                        {
-                            if (upWithVar != null)
-                            {
-                                upWithVar.AddVariable(temp);
-                            }
-                            else
-                            {
-                                upWithVar = new VariablesMulriplication(temp);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        vs.AddVariable(temp);
-                    }
-                });
+            //    this.variables.ForEach(delegate(FunctionElement v)
+            //    {
+            //        var temp = v.Clone() as FunctionElement;
+            //        if (temp.HasVariable(name))
+            //        {
+            //            if (temp.Degree < 0)
+            //            {
+            //                if (downWithVar != null)
+            //                {
+            //                    downWithVar.AddVariable(temp);
+            //                }
+            //                else
+            //                {
+            //                    downWithVar = new VariablesMulriplication(temp);
+            //                }
+            //            }
+            //            else
+            //            {
+            //                if (upWithVar != null)
+            //                {
+            //                    upWithVar.AddVariable(temp);
+            //                }
+            //                else
+            //                {
+            //                    upWithVar = new VariablesMulriplication(temp);
+            //                }
+            //            }
+            //        }
+            //        else
+            //        {
+            //            vs.AddVariable(temp);
+            //        }
+            //    });
 
-                if (upWithVar != null)
-                {
-                    if (downWithVar != null && upWithVar.Count == 1 && downWithVar.Count == 1)
-                    {
-                        vs.AddVariable((upWithVar.Derivative(name) * downWithVar - downWithVar.Derivative(name) * upWithVar) / downWithVar.Pow(2));
-                    }
-                    else
-                    {
-                        if (downWithVar != null)
-                        {
-                            downWithVar.variables.ForEach(v => upWithVar.variables.Add(v));
-                        }
-                        Function upFunc = new Function();
-                        foreach (var v1 in upWithVar.variables)
-                        {
-                            VariablesMulriplication temp = v1.Derivative(name);
-                            foreach (var v2 in upWithVar.variables)
-                            {
-                                if (v1 != v2) // Да, именно по ссылкам
-                                {
-                                    temp.AddVariable(v2);
-                                }
-                            }
-                            upFunc += temp;
-                        }
-                        vs.AddVariable(upFunc);
-                    }
-                }
-                return vs;
-            }
+            //    if (upWithVar != null)
+            //    {
+            //        if (downWithVar != null && upWithVar.Count == 1 && downWithVar.Count == 1)
+            //        {
+            //            vs.AddVariable((upWithVar.Derivative(name) * downWithVar - downWithVar.Derivative(name) * upWithVar) / downWithVar.Pow(2));
+            //        }
+            //        else
+            //        {
+            //            if (downWithVar != null)
+            //            {
+            //                downWithVar.variables.ForEach(v => upWithVar.variables.Add(v));
+            //            }
+            //            Function upFunc = new Function();
+            //            foreach (var v1 in upWithVar.variables)
+            //            {
+            //                VariablesMulriplication temp = v1.Derivative(name);
+            //                foreach (var v2 in upWithVar.variables)
+            //                {
+            //                    if (v1 != v2) // Да, именно по ссылкам
+            //                    {
+            //                        temp.AddVariable(v2);
+            //                    }
+            //                }
+            //                upFunc += temp;
+            //            }
+            //            vs.AddVariable(upFunc);
+            //        }
+            //    }
+            //    return vs;
+            //}
             return new VariablesMulriplication(0);
         }
 
@@ -633,12 +651,7 @@ namespace MagicLibrary.MathUtils
                 List<string> vars = new List<string>();
                 this.variables.ForEach(delegate(FunctionElement v)
                 {
-                    if (v is Variable)
-                    {
-                        if (!v.IsConstant() && !vars.Contains(v.Name))
-                            vars.Add(v.Name);
-                    }
-                    else
+                    if (v is Function)
                     {
                         var vars2 = (v as Function).Variables;
                         foreach (var v2 in vars2)
@@ -646,6 +659,11 @@ namespace MagicLibrary.MathUtils
                             if (!vars.Contains(v2))
                                 vars.Add(v2);
                         }
+                    }
+                    else
+                    {
+                        if (!v.IsConstant() && !vars.Contains(v.Name))
+                            vars.Add(v.Name);
                     }
                 });
                 return vars.ToArray();
@@ -687,22 +705,24 @@ namespace MagicLibrary.MathUtils
 
         private string getVarMLString(FunctionElement e, bool needBrackets = true)
         {
-            MagicLibrary.MathUtils.MathFunctions.PowerFunction p = new MathFunctions.PowerFunction(e.Degree);
-            var format = p.FormatPower();
-            var name = e.ToMathMLShort();
+            //MagicLibrary.MathUtils.MathFunctions.PowerFunction p = new MathFunctions.PowerFunction(e.Degree);
+            //var format = p.FormatPower();
+            //var name = e.ToMathMLShort();
 
-            if (e is Function && (e as Function).IsNeedBracketsForPower() && (
-                    p.IsNeedBrackets() ||
-                    needBrackets
-                ))
-            {
-                name = String.Format("<mfenced><mrow><mi>{0}</mi></mrow></mfenced>", name);
-            }
-            else
-            {
-                name = String.Format("<mi>{0}</mi>", name);
-            }
-            return String.Format(format, name);
+            //if (e is Function && (e as Function).IsNeedBracketsForPower() && (
+            //        p.IsNeedBrackets() ||
+            //        needBrackets
+            //    ))
+            //{
+            //    name = String.Format("<mfenced><mrow><mi>{0}</mi></mrow></mfenced>", name);
+            //}
+            //else
+            //{
+            //    name = String.Format("<mi>{0}</mi>", name);
+            //}
+            //return String.Format(format, name);
+
+            return e.ToMathML();
         }
 
         public string ToMathML()
@@ -737,14 +757,7 @@ namespace MagicLibrary.MathUtils
             if (this.Count == 1 && this.Constant == 1)
             {
                 var v = this.variables.Find(v1 => v1.Name != "");
-                if (v.Degree < 0)
-                {
-                    downVars.Add(v);
-                }
-                else
-                {
-                    upVars.Add(v);
-                }
+                upVars.Add(v);
             }
             else
             {
@@ -752,14 +765,8 @@ namespace MagicLibrary.MathUtils
                 {
                     if (v.Name != "" && !v.ToString().Equals("1"))
                     {
-                        if (v.Degree < 0)
-                        {
-                            downVars.Add(v);
-                        }
-                        else
-                        {
-                            upVars.Add(v);
-                        }
+
+                        upVars.Add(v);
                     }
                 }
             }

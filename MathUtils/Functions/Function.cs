@@ -5,44 +5,132 @@ using System.Text;
 
 using MagicLibrary.MathUtils.MathFunctions;
 using System.Text.RegularExpressions;
+using MagicLibrary.Exceptions;
 
-namespace MagicLibrary.MathUtils
+namespace MagicLibrary.MathUtils.Functions
 {
     public class Function : FunctionElement
     {
-        public static List<IMathFunction> AllFunctions = new List<IMathFunction>()
+        #region Basic function
+        /// <summary>
+        /// All math function which you can use in your functions
+        /// </summary>
+        private static List<IMathFunction> _allFunctions = new List<IMathFunction>()
         {
+            new MathOperator("plus", (f1, f2) => f1 + f2, "\\+"),
+            new MathOperator("minus", (f1, f2) => f1 - f2, "-"),
+            new MathOperator("multiply", (f1, f2) => f1 * f2, "\\*"),
+            new MathOperator("divide", (f1, f2) => f1 / f2, "/"),
 
+            new MathOperator("power", delegate(FunctionElement func, FunctionElement power)
+                {
+                    try{
+                        func.ToDouble();
+                        power.ToDouble();
+                    }
+                    catch(NotImplementedException)
+                    {
+                        // Если не определена функция перевода в дабл, то врятли когда-нибудь можно будет возвести эту штуку в степень
+                        throw new InvalidMathFunctionParameters();
+                    }
+                    catch
+                    {
+                        // Остальные исключения не из-за типов, поэтому пропускаем
+                    }
+
+                    var f = func.Clone() as FunctionElement;
+
+                    bool powerIsConstant = power.IsConstant();
+                    // степень 1
+                    if (powerIsConstant && power.ToDouble() == 1)
+                    {
+                        return f;
+                    }
+                    if (powerIsConstant && power.ToDouble() == 0)
+                    {
+                        return new Function(1);
+                    }
+                    // Если возводим число в степень число
+                    if (powerIsConstant && f.IsConstant())
+                    {
+                        return new Function(Math.Pow(f.ToDouble(), power.ToDouble()));
+                    }
+
+                    var last = f.GetLastFunction();
+                    if (last != null && last.Item1.Equals(Function.GetMathFunction("power")))
+                    {
+                        // Берем последнюю степень, удаляем её, перемножаем её с добавляемой степенью
+                        // и применяем её опять (для пересёта)
+                        f.MathFunctions.Remove(last);
+                        last.Item2[0] *= power;
+
+                        return f.ApplyFunction(last.Item1.FunctionName, last.Item2);
+                    }
+
+                    f.ForceAddFunction("power", power);
+                    return f;
+                    
+                }, "\\^"),
+                new PrefixMathFunction("cos", delegate(FunctionElement func)
+                    {
+                        var f = func.Clone() as FunctionElement;
+
+                        if(f.IsConstant())
+                        {
+                            return new Function(Math.Cos(f.ToDouble()));
+                        }
+
+                        f.ForceAddFunction("cos");
+                        return f;
+
+                    }, "cos{0}"),
         };
+#endregion
+
+        public static IMathFunction GetMathFunction(string name)
+        {
+            return Function._allFunctions.Find(mf => mf.FunctionName.Equals(name));
+        }
+
+        public static void RegisterFunction(IMathFunction func)
+        {
+            if (Function.GetMathFunction(func.FunctionName) != null)
+            {
+                throw new Exception(String.Format("It is already exist function with name '{0}'", func.FunctionName));
+            }
+            Function._allFunctions.Add(func);
+        }
 
         private List<VariablesMulriplication> variables;
 
-        public Function(double constant = 0, string varName = "", double degree = 1)
+        private void _initProperties()
         {
+            this.MathFunctions = new List<Tuple<IMathFunction, FunctionElement[]>>();
             this.variables = new List<VariablesMulriplication>();
-            this.Functions = new List<MathFunctions.IMathFunction>();
-            this.Degree = degree;
-            this.AddVariablesMul(new VariablesMulriplication(new Variable(varName, degree), constant));
+        }
+
+        public Function(double constant = 0, string varName = "")
+        {
+            this._initProperties();
+            this.AddVariablesMul(new VariablesMulriplication(new Variable(varName), constant));
         }
 
         public Function(string func)
         {
-            this.ReplaceThisByElement(Function.FromString(func));
+            this.ReplaceThisWithElement(Function.FromString(func));
         }
 
-        public Function(VariablesMulriplication v, double degree = 1)
+        public Function(VariablesMulriplication v)
         {
-            variables = new List<VariablesMulriplication>();
-            this.Functions = new List<MathFunctions.IMathFunction>();
-            this.Degree = degree;
+            this._initProperties();
+
             this.AddVariablesMul(v);
         }
 
-        public Function(VariablesMulriplication[] variables, double degree = 1)
+        public Function(VariablesMulriplication[] variables)
         {
-            this.variables = new List<VariablesMulriplication>();
-            this.Functions = new List<MathFunctions.IMathFunction>();
-            this.Degree = degree;
+            this._initProperties();
+
             foreach (var v in variables)
             {
                 this.AddVariablesMul(v);
@@ -51,28 +139,29 @@ namespace MagicLibrary.MathUtils
 
         public Function(FunctionElement el)
         {
-            this.ReplaceThisByElement(el);
+            this.ReplaceThisWithElement(el);
         }
 
-        public void ReplaceThisByElement(FunctionElement el)
+        public void ReplaceThisWithElement(FunctionElement el)
         {
-            this.variables = new List<VariablesMulriplication>();
-            this.Functions = new List<MathFunctions.IMathFunction>();
-            if (el is Variable)
+            this._initProperties();
+
+            if (el is Function)
             {
-                this.AddVariablesMul(new VariablesMulriplication(el));
+                this.variables = new List<VariablesMulriplication>((el as Function).variables);
+                this.CopyFunctions(el);
             }
             else
             {
-                this.variables = new List<VariablesMulriplication>((el as Function).variables);
-                el.Functions.ForEach(f => this.Functions.Add(f.Clone() as IMathFunction));
+                this.AddVariablesMul(new VariablesMulriplication(el));
+                this.CopyFunctions(el);
             }
         }
 
         public static Function FromString(string func)
         {
             string f = func;
-            string mask = @"\(\s*(?<function>.+)\s*\)";
+            string mask = @".*(?<all>\(\s*(?<function>.+?)\))";
 
             var m = Regex.Match(f, mask);
 
@@ -81,11 +170,16 @@ namespace MagicLibrary.MathUtils
             // Все скобки заменяем на ссылки на функции
             while (m.Success)
             {
-                f = f.Replace(m.Value, String.Format("[f{0}]", fs.Count));
-                fs.Add(new Function(m.Groups["function"].Value));
+                f = f.Replace(m.Groups["all"].Value, String.Format("[_f{0}]", fs.Count));
+                fs.Add(new Function(Function._fromStringWitoutBracers(m.Groups["function"].Value, fs)));
 
                 m = Regex.Match(f, mask);
             }
+
+            //for (int i = 0; i < fs.Count; i++)
+            //{
+            //    f = f.Replace(String.Format("[_f{0}]", i), String.Format("(_f{0})", i));
+            //}
 
             return Function._fromStringWitoutBracers(f, fs);
         }
@@ -94,7 +188,7 @@ namespace MagicLibrary.MathUtils
         {
             string f = func.Trim();
 
-            string mask = @"^\[f(?<index>\d+)\]$";
+            string mask = @"^\[_f(?<index>\d+)\]$";
             var m = Regex.Match(f, mask);
 
             if (m.Success)
@@ -102,6 +196,7 @@ namespace MagicLibrary.MathUtils
                 return fs[Int32.Parse(m.Groups["index"].Value)];
             }
 
+            #region operators
             // Plus
             mask = @"(?<first>.+)\+(?<second>.+)";
 
@@ -142,19 +237,35 @@ namespace MagicLibrary.MathUtils
                 return Function._fromStringWitoutBracers(m.Groups["first"].Value, fs) / Function._fromStringWitoutBracers(m.Groups["second"].Value, fs);
             }
 
-            // Power
-            mask = @"(?<first>.+)\^\s*(?<second>\d+(\.\d+)?)";
+#endregion
 
-            m = Regex.Match(f, mask);
-
-            if (m.Success)
+            // check math functions
+            foreach (var mf in Function._allFunctions)
             {
+                string[] _paramsIndexes = new string[mf.ParamsCount];
+                for (int i = 0; i < mf.ParamsCount; i++)
+                {
+                    _paramsIndexes[i] = String.Format(@"\s*(?<p{0}>.+)\s*", i);
+                }
 
-                return new Function(Function._fromStringWitoutBracers(m.Groups["first"].Value, fs).Pow(Double.Parse(m.Groups["second"].Value)));
+                mask = String.Format(mf.ToStringFormat, _paramsIndexes);
+
+                m = Regex.Match(f, mask);
+
+                if (m.Success)
+                {
+                    FunctionElement[] _params = new FunctionElement[mf.ParamsCount];
+                    for (int i = 0; i < mf.ParamsCount; i++)
+                    {
+                        _params[i] = Function._fromStringWitoutBracers(m.Groups[String.Format("p{0}", i)].Value, fs);
+                    }
+
+                    return new Function(mf.Calculate(_params));
+                }
             }
 
             // Digit
-            mask = @"^\s*(?<value>\d+(\.\d+)?)\s*$";
+            mask = @"^\s*(?<value>\d+([\.\,]\d+)?)\s*$";
 
             m = Regex.Match(f, mask);
 
@@ -164,16 +275,19 @@ namespace MagicLibrary.MathUtils
             }
 
             // Variable
-            mask = @"^\s*(?<var>\w+\.*)\s*$";
-
-            m = Regex.Match(f, mask);
-
-            if (m.Success)
+            try
             {
-                return new Function(1, m.Groups["var"].Value);
+                return Variable.ParseFromString(f);
             }
+            catch { }
 
-            throw new Exception("Invalid function string");
+            try
+            {
+                return StringVariable.ParseFromString(f);
+            }
+            catch { }
+
+            throw new Exception("Invalid string");
         }
 
         public void AddVariablesMul(VariablesMulriplication variablesMulriplication)
@@ -193,7 +307,7 @@ namespace MagicLibrary.MathUtils
                     //this.variables.Add(variablesMulriplication);
                     //(this + variablesMulriplication.ToFunction()).CopyTo(this);
                     var func = variablesMulriplication.ToFunction();
-                    if (func.Functions.Exists(f => !(f is PowerFunction)) || func.Degree != 1)
+                    if (func.MathFunctions.Count != 0)
                     {
                         this.variables.Add(variablesMulriplication);
                     }
@@ -253,9 +367,14 @@ namespace MagicLibrary.MathUtils
             {
                 return this.Clone() as Function;
             }
+            if (this.MathFunctions.Count != 0)
+            {
+                return this * e;
+            }
             Function f = new Function();
-            this.variables.ForEach(vs => f.variables.Add((vs * (e.Pow(1.0 / this.Degree))).variables[0]));
-            f.OverrideFunctions(this);
+
+            this.variables.ForEach(vs => f += vs * e);
+            f.CopyFunctions(this);
             return f;
         }
 /*
@@ -481,10 +600,12 @@ namespace MagicLibrary.MathUtils
                     vars.Add(vs.Clone() as VariablesMulriplication);
                 }
             }
-            //this.variables.ForEach(v => vars.Add(v.Clone() as VariablesMulriplication));
-            var temp = new Function(vars.ToArray(), this.Degree);
-            temp.OverrideFunctions(this);
-            return temp;// new Function(vars.ToArray(), this.Degree);
+            
+
+            var temp = new Function(vars.ToArray());
+            temp.CopyFunctions(this);
+
+            return temp;
         }
 
         public Function Inverse()
@@ -494,18 +615,11 @@ namespace MagicLibrary.MathUtils
 
         public override FunctionElement Pow(double power)
         {
-            /*if (this.VariablesMulsWithVariablesCount == 1 && this.VariablesMulsWithoutVariablesCount == 0)
-            {
-                var vs = this.variables.Find(v => v.VarsCount != 0);
-                return new Function(vs.Pow(power));
-            }*/
-            if (this.IsConstant())
+            /*if (this.IsConstant())
             {
                 return new Function(Math.Pow(this.ToDouble(), power));
-            }
-            Function F = this.Clone() as Function;
-            F.Degree *= power;
-            return F;
+            }*/
+            return this.ApplyFunction("power", new Function(power));
         }
 
         public FunctionElement Sqrt()
@@ -558,6 +672,9 @@ namespace MagicLibrary.MathUtils
             while (Math.Abs((curX - nextX).ToDouble()) > eps);
             return new Equation(new Function(1, name), nextX);
 
+#warning Посидим пока без решений уравнений
+            #region Как в школе учили
+            /*
             double degree = equation.LeftPart.Degree * equation.LeftPart.variables.Max(delegate(VariablesMulriplication vs)
             {
                 if (vs.HasVariable(name))
@@ -664,7 +781,8 @@ namespace MagicLibrary.MathUtils
                     break;
             }
 
-            return equation;
+            return equation;*/
+            #endregion
         }
 
         public Function GetElementsWithVariable(string name)
@@ -792,6 +910,22 @@ namespace MagicLibrary.MathUtils
             return e;
         }
 
+        public Function SetVariablesValues(Dictionary<string, FunctionElement> dict)
+        {
+            Function e = this.Clone() as Function;
+
+            foreach (var item in dict)
+            {
+                e = e.SetVariableValue(item.Key, item.Value) as Function;
+            }
+
+            if (e.IsConstant())
+            {
+                return new Function(e.Calculate(e.ToDouble()));
+            }
+            return e;
+        }
+
         private Function SetVariableValue(string name, IMatrixElement value)
         {
             if (value is FunctionMatrixElement)
@@ -822,10 +956,7 @@ namespace MagicLibrary.MathUtils
             this.variables.ForEach(v => newF += v.SetVariableValue(name, e));
             //newF.Degree = this.Degree;
             //newF.Functions = new List<MathFunctions.IMathFunction>(this.Functions);
-            newF.OverrideFunctions(this);
-            if (newF.IsConstant())
-                return new Function(newF.ToDouble());//Math.Pow(newF.ToDouble(), this.Degree));
-            return newF;
+            return newF.ApplyFunctions(this);
         }
 
         public override VariablesMulriplication Derivative(string name)
@@ -836,13 +967,14 @@ namespace MagicLibrary.MathUtils
             this.variables.ForEach(vs => e.AddVariablesMul(vs.Derivative(name)));
             newVS.AddVariable(e);
 
-            if (this.Degree != 1)
+#warning И без производных
+            /*if (this.Degree != 1)
             {
                 Function predF = this.Clone() as Function;
                 predF.Degree--;
                 newVS.AddVariable(predF);
                 newVS.Constant *= this.Degree;
-            }
+            }*/
 
             return newVS;
         }
@@ -861,40 +993,33 @@ namespace MagicLibrary.MathUtils
             return m;
         }
 
-        public override string ToString()
-        {
-            if (this.Degree == 0)
-                return "1";
-            if (this.Degree == 1)
-                return this.Name;
-            /*if (this.Degree == 0.5)
-            {
-                return String.Format("sqrt({0})", this.Name);
-            }*/
-            if (this.Degree < 0)
-            {
-                if (this.IsNeedBracketsForPower())
-                {
-                    return String.Format("({0})^({1})", this.Name, this.Degree);
-                }
-                return String.Format("{0}^({1})", this.Name, this.Degree);
-            }
+//        public override string ToString()
+//        {
+//#warning варнинг
+//            /* Функции и так должны всё это пересчитывать, но на всякий случай тут варнинг
+//             * if (this.Degree == 0)
+//                return "1";
+//            if (this.Degree == 1)
+//                return this.Name;*/
+//            /*if (this.Degree == 0.5)
+//            {
+//                return String.Format("sqrt({0})", this.Name);
+//            }*/
+//            if (this.Degree < 0)
+//            {
+//                if (this.IsNeedBracketsForPower())
+//                {
+//                    return String.Format("({0})^({1})", this.Name, this.Degree);
+//                }
+//                return String.Format("{0}^({1})", this.Name, this.Degree);
+//            }
 
-            if (this.IsNeedBracketsForPower())
-            {
-                return String.Format("({0})^{1}", this.Name, this.Degree);
-            }
-            return String.Format("{0}^{1}", this.Name, this.Degree);
-        }
-
-        public override string ToMathML()
-        {
-            string s = this.ToMathMLShort();
-
-            PowerFunction p = new PowerFunction(this.Degree);
-
-            return String.Format("<math xmlns='http://www.w3.org/1998/Math/MathML'><mrow>{0}</mrow></math>", p.FormatStringML(s));
-        }
+//            if (this.IsNeedBracketsForPower())
+//            {
+//                return String.Format("({0})^{1}", this.Name, this.Degree);
+//            }
+//            return String.Format("{0}^{1}", this.Name, this.Degree);
+//        }
 
         public override string ToMathMLShort()
         {
@@ -1033,7 +1158,7 @@ namespace MagicLibrary.MathUtils
                     }
                 }
 
-                return this.ShowFunctions(sb.ToString());
+                return sb.ToString(); // this.showFunctions(sb.ToString());
             }
         }
 
@@ -1061,7 +1186,7 @@ namespace MagicLibrary.MathUtils
         {
             func.variables = new List<VariablesMulriplication>();
             this.variables.ForEach(vs => func.variables.Add(vs));
-            func.Degree = this.Degree;
+            func.CopyFunctions(this);
         }
 
         public Function OpenAllBrackets()
@@ -1075,8 +1200,8 @@ namespace MagicLibrary.MathUtils
 
         public bool IsNeedBrackets()
         {
-            if (Math.Abs(this.Degree) != 1)
-                return false;
+            //if (Math.Abs(this.Degree) != 1)
+            //    return false;
             return this.IsNeedBracketsForPower();
         }
 
@@ -1108,7 +1233,7 @@ namespace MagicLibrary.MathUtils
 
         public override bool IsVariableMultiplication()
         {
-            if (this.Degree != 1)
+            if (this.MathFunctions.Count != 0)
                 return false;
             int count = 0;
             foreach (var vs in this.variables)

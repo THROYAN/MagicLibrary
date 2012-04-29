@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MagicLibrary.MathUtils
+namespace MagicLibrary.MathUtils.Functions
 {
     public class Equation
     {

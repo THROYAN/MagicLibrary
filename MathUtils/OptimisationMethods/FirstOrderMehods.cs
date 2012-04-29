@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using MagicLibrary.MathUtils;
+using MagicLibrary.MathUtils.Functions;
 
 namespace MagicLibrary.MathUtils.OptimisationMethods
 {
