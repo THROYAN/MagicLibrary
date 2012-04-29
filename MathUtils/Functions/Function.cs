@@ -196,49 +196,6 @@ namespace MagicLibrary.MathUtils.Functions
                 return fs[Int32.Parse(m.Groups["index"].Value)];
             }
 
-            #region operators
-            // Plus
-            mask = @"(?<first>.+)\+(?<second>.+)";
-
-            m = Regex.Match(f, mask);
-
-            if (m.Success)
-            {
-                return Function._fromStringWitoutBracers(m.Groups["first"].Value, fs) + Function._fromStringWitoutBracers(m.Groups["second"].Value, fs);
-            }
-
-            // Minus
-            mask = @"(?<first>.+)\-(?<second>.+)";
-
-            m = Regex.Match(f, mask);
-
-            if (m.Success)
-            {
-                return Function._fromStringWitoutBracers(m.Groups["first"].Value, fs) - Function._fromStringWitoutBracers(m.Groups["second"].Value, fs);
-            }
-
-            // Multiply
-            mask = @"(?<first>.+)\*(?<second>.+)";
-
-            m = Regex.Match(f, mask);
-
-            if (m.Success)
-            {
-                return Function._fromStringWitoutBracers(m.Groups["first"].Value, fs) * Function._fromStringWitoutBracers(m.Groups["second"].Value, fs);
-            }
-
-            // Divide
-            mask = @"(?<first>.+)/(?<second>.+)";
-
-            m = Regex.Match(f, mask);
-
-            if (m.Success)
-            {
-                return Function._fromStringWitoutBracers(m.Groups["first"].Value, fs) / Function._fromStringWitoutBracers(m.Groups["second"].Value, fs);
-            }
-
-#endregion
-
             // check math functions
             foreach (var mf in Function._allFunctions)
             {
