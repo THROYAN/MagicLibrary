@@ -2,29 +2,46 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
+using MagicLibrary.MathUtils.PetriNetsUtils;
 using System.Text.RegularExpressions;
-using MagicLibrary.MathUtils.MathFunctions;
-using MagicLibrary.Exceptions;
 
 namespace MagicLibrary.MathUtils.Functions
 {
-    public class StringVariable : FunctionElement
+    public class RecordVariable : FunctionElement
     {
-        public override string Name { get { return String.Format("'{0}'", this.Value); } }
+        public Dictionary<string, FunctionElement> Values { get; private set; }
+        private string _value;
 
-        public string Value { get; set; }
-
-        public StringVariable(string value)
+        public RecordVariable(string func)
         {
-            this.Value = value;
+            this._value = func;
+            this.Values = new Dictionary<string, FunctionElement>();
             this.MathFunctions = new List<Tuple<MathFunctions.IMathFunction, FunctionElement[]>>();
+
+            this.ParseFromString(func);
+        }
+
+        public override string Name
+        {
+            get { return this._value; }
         }
 
         public override bool IsDouble()
         {
-            //int i;
-            //return Int32.TryParse(this.Name, out i);
             return false;
+        }
+
+        public override bool IsConstant()
+        {
+            foreach (var item in this.Values)
+            {
+                if (!item.Value.IsConstant())
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public override FunctionElement Pow(double power)
@@ -34,12 +51,17 @@ namespace MagicLibrary.MathUtils.Functions
 
         public override FunctionElement SetVariableValue(string name, double value)
         {
-            throw new NotImplementedException();
+            return this.SetVariableValue(name, new Function(value));
         }
 
         public override FunctionElement SetVariableValue(string name, FunctionElement value)
         {
-            throw new NotImplementedException();
+            var r = this.Clone() as RecordVariable;
+            foreach (var item in this.Values)
+            {
+                r.Values[item.Key] = item.Value.SetVariableValue(name, value);
+            }
+            return r;
         }
 
         public override VariablesMulriplication Derivative(string name)
@@ -54,47 +76,41 @@ namespace MagicLibrary.MathUtils.Functions
 
         public override double ToDouble()
         {
-            //int i;
-            //if (Int32.TryParse(this.Name, out i))
-            //  return i;
             throw new NotImplementedException();
         }
 
         public override bool HasVariable(string name)
         {
+            foreach (var item in this.Values)
+            {
+                if (item.Value.HasVariable(name))
+                {
+                    return true;
+                }
+            }
             return false;
         }
 
         public override object Clone()
         {
-            StringVariable s = new StringVariable(this.Value);
-            s.CopyFunctions(this);
-            return s;
+            RecordVariable r = new RecordVariable(this._value);
+            r.CopyFunctions(this);
+            return r;
         }
 
         public override bool IsVariableMultiplication()
         {
-            return false;
+            return true;
         }
 
         public override VariablesMulriplication ToVariableMultiplication()
         {
-            return new VariablesMulriplication(this.Clone() as StringVariable);
+            return new VariablesMulriplication(this.Clone() as FunctionElement);
         }
 
         public override string ToMathMLShort()
         {
-            return this.Name;
-        }
-
-        public override string ToString()
-        {
-            return this.Name;
-        }
-
-        public override string ToMathML()
-        {
-            return this.Name;
+            return this.ToString();
         }
 
         public override bool IsLeaf()
@@ -104,39 +120,24 @@ namespace MagicLibrary.MathUtils.Functions
 
         public override FunctionElement ToLeaf()
         {
-            return this;
+            return this.Clone() as FunctionElement;
         }
-
-        public static MathOperator Concat = new MathOperator("concat", delegate(FunctionElement e1, FunctionElement e2)
-            {
-                var s1 = e1.ToLeaf() as StringVariable;
-                var s2 = e2.ToLeaf() as StringVariable;
-                if (s1 != null && s2 != null)
-                {
-                    return new Function(new StringVariable(String.Concat(s1.Value, s2.Value)));
-                }
-
-                throw new InvalidMathFunctionParameters();
-
-            }, "\\^");
-
-        public override bool IsConstant()
-        {
-            return true;
-        }
-
 
         public override void ParseFromString(string func)
         {
-            string mask = "^\\'(?<value>.*)\\'$";
-            var m = Regex.Match(func, mask);
+            var m = Regex.Match(func, @"^\s*\{(?<body>.*)\}\s*$");
 
             if (!m.Success)
             {
                 throw new Exception();
             }
 
-            this.Value = m.Groups["value"].Value;
+            var parsedToken = Function.ParseAttributes(m.Groups["body"].Value);
+
+            foreach (var item in parsedToken)
+            {
+                this.Values[item.Key] = new Function(item.Value);
+            }
         }
     }
 }

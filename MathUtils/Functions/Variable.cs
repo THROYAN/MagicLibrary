@@ -53,7 +53,7 @@ namespace MagicLibrary.MathUtils.Functions
 
         public override FunctionElement SetVariableValue(string name, FunctionElement value)
         {
-            if (value.IsConstant())
+            if (value.IsDouble())
             {
                 return this.SetVariableValue(name, value.ToDouble());
             }
@@ -196,10 +196,7 @@ namespace MagicLibrary.MathUtils.Functions
             {
                 var v = obj as Variable;
                 
-                return
-                    (this.SameMathFunctionsWith(v) && (v.Name.Equals(v.Name))) ||
-                        (this.IsConstant() &&
-                        (v == null || v.IsConstant()));
+                return v.Name.Equals(this.Name) && this.SameMathFunctionsWith(v);
             }
             return base.Equals(obj);
         }
@@ -209,14 +206,14 @@ namespace MagicLibrary.MathUtils.Functions
             return base.GetHashCode();
         }
 
-        public override bool IsConstant()
+        public override bool IsDouble()
         {
             return this.Name.Equals("");
         }
 
         public override VariablesMulriplication Derivative()
         {
-            if (this.IsConstant())
+            if (this.IsDouble())
                 return new VariablesMulriplication(0);
             throw new Exception();
 #warning варнинг
@@ -225,7 +222,7 @@ namespace MagicLibrary.MathUtils.Functions
 
         public override double ToDouble()
         {
-            if (this.IsConstant())
+            if (this.IsDouble())
             {
                 return this.Calculate(1);
             }
@@ -262,15 +259,30 @@ namespace MagicLibrary.MathUtils.Functions
             return this.ShowMLFunctions(this.Name);
         }
 
-        public static Function ParseFromString(string str)
+        public override void ParseFromString(string func)
         {
-            var mask = @"^(?<var>\w+.*)$";
-            var m = Regex.Match(str, mask, RegexOptions.IgnorePatternWhitespace);
+            var mask = @"^(?<var>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)$";
+            var m = Regex.Match(func, mask, RegexOptions.IgnorePatternWhitespace);
             if (!m.Success)
             {
                 throw new Exception();
             }
-            return new Function(1, m.Groups["var"].Value);
+            this.name = m.Groups["var"].Value;
+        }
+
+        public override bool IsLeaf()
+        {
+            return true;
+        }
+
+        public override FunctionElement ToLeaf()
+        {
+            return this;
+        }
+
+        public override bool IsConstant()
+        {
+            return this.Name.Equals("");
         }
     }
 }

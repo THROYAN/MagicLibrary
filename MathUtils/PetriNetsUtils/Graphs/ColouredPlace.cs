@@ -36,7 +36,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
 
         public bool IsLegalInitTokens()
         {
-            return this.InitTokens.TrueForAll(t => this.colorSet.IsLegal(t));
+            return this.InitTokens.TrueForAll(t => this.colorSet.IsLegal(t.Function));
         }
 
         public override void CopyTo(MathUtils.Graphs.IVertex vertex)

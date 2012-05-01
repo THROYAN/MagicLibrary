@@ -3,15 +3,62 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using MagicLibrary.MathUtils.MathFunctions;
+using MagicLibrary.MathUtils.Functions;
+using MagicLibrary.Exceptions;
+using System.Text.RegularExpressions;
+
 namespace MagicLibrary.MathUtils
 {
-    public class MultiSet<T> : IEnumerable<KeyValuePair<T, int>>
+    public class MultiSet<T> : FunctionElement, IEnumerable<KeyValuePair<T, int>>
+        where T : FunctionElement
     {
+        private const string _elementsSeparator = "`";
+        private const string _plus = "++";
+
         private Dictionary<T, int> counts;
 
         public MultiSet()
         {
             this.counts = new Dictionary<T, int>();
+            this.MathFunctions = new List<Tuple<IMathFunction, FunctionElement[]>>();
+        }
+
+        public MultiSet(FunctionElement e)
+        {
+            this.counts = new Dictionary<T, int>();
+            this.MathFunctions = new List<Tuple<IMathFunction, FunctionElement[]>>();
+
+
+            if (e.IsLeaf())
+            {
+                var e2 = e.ToLeaf();
+                if (e2 is MultiSet<T>)
+                {
+                    var m = e2 as MultiSet<T>;
+                    foreach (var item in m.counts)
+                    {
+                        this.counts[item.Key] = item.Value;
+                    }
+                    return;
+                }
+                else
+                {
+                    if (e2 is T)
+                    {
+                        this[e2 as T] = 1;
+                        return;
+                    }
+                }
+            }
+            if (e.GetType() == typeof(T))
+            {
+                this[e as T] = 1;
+            }
+            else
+            {
+                throw new Exception();
+            }
         }
 
         /// <summary>
@@ -23,9 +70,9 @@ namespace MagicLibrary.MathUtils
         {
             get
             {
-                if (this.counts.ContainsKey(s))
+                if (this.counts.Count != 0 && this.counts.Keys.FirstOrDefault(k => k.Equals(s)) != null)
                 {
-                    return this.counts[s];
+                    return this.counts[this.counts.Keys.First(k => k.Equals(s))];
                 }
                 return 0;
             }
@@ -33,13 +80,14 @@ namespace MagicLibrary.MathUtils
             {
                 if (value >= 0)
                 {
-                    if (this.counts.ContainsKey(s))
+                    if (this.counts.Count != 0 && this.counts.Keys.FirstOrDefault(k => k.Equals(s)) != null)
                     {
+                        var s2 = this.counts.Keys.First(k => k.Equals(s));
                         if (value == 0)
                         {
-                            this.counts.Remove(s);
+                            this.counts.Remove(s2);
                         }
-                        this.counts[s] = value;
+                        this.counts[s2] = value;
                     }
                     else
                     {
@@ -102,19 +150,18 @@ namespace MagicLibrary.MathUtils
         public override string ToString()
         {
             if (this.Count == 0)
-                return "empty";
+                return "<empty set>";
             StringBuilder sb = new StringBuilder();
-
-            string plus = " + ", separator = "*";
 
             foreach (var item in this.counts)
             {
                 if (item.Value > 0)
                 {
-                    sb.AppendFormat("{0}{1}{2}{3}", item.Value, separator, item.Key, plus);
+                    string elString = item.Key is Function ? (item.Key as Function).IsNeedBrackets() ? String.Format("({0})", item.Key) : item.Key.ToString() : item.Key.ToString();
+                    sb.AppendFormat("{0}{1}{2}{3}", item.Value, MultiSet<T>._elementsSeparator, elString, MultiSet<T>._plus);
                 }
             }
-            sb.Remove(sb.Length - plus.Length, plus.Length);
+            sb.Remove(sb.Length - MultiSet<T>._plus.Length, MultiSet<T>._plus.Length);
 
             return sb.ToString();
         }
@@ -275,48 +322,172 @@ namespace MagicLibrary.MathUtils
         }
 
         #endregion
-    }
 
-    public class MultiSetEnum<T> : IEnumerator<KeyValuePair<T, int>>
-    {
-        private MultiSet<T> m;
-        private int curI;
-
-        public MultiSetEnum(MultiSet<T> multiSet)
-        {
-            this.m = multiSet;
-            
-            curI = 0;
-        }
-
-        public KeyValuePair<T, int> Current
-        {
-            get
+        public static MathOperator SumOperator = new MathOperator("multiset sum", delegate(FunctionElement e1, FunctionElement e2)
             {
-                var temp = this.m.GetElementByIndex(curI);
-                return new KeyValuePair<T, int>(temp, this.m[temp]);
-            }
+                if (!(e1.IsLeaf() && e2.IsLeaf()))
+                {
+                    throw new InvalidMathFunctionParameters();
+                }
+                try
+                {
+                    var m1 = new MultiSet<T>(e1);
+                    var m2 = new MultiSet<T>(e2);
+
+                    return m1 + m2;
+                }
+                catch(Exception e)
+                {
+                    throw new InvalidMathFunctionParameters();
+                }
+
+            }, Regex.Escape(MultiSet<T>._plus));
+
+        public static MathOperator MSElement = new MathOperator("`", delegate(FunctionElement e1, FunctionElement e2)
+            {
+                if (!e1.IsDouble() || Math.Round(e1.ToDouble()) != e1.ToDouble())
+                {
+                    throw new InvalidMathFunctionParameters();
+                }
+
+                MultiSet<T> m = new MultiSet<T>();
+                m[new Function(e2) as T] = (int)e1.ToDouble();
+
+                return m;
+            }, Regex.Escape(MultiSet<T>._elementsSeparator));
+
+        public override string Name
+        {
+            get { return this.ToString(); }
         }
 
-        public void Dispose()
+        public override bool IsDouble()
+        {
+            return false;
+        }
+
+        public override FunctionElement Pow(double power)
         {
             throw new NotImplementedException();
         }
 
-        object System.Collections.IEnumerator.Current
+        public override FunctionElement SetVariableValue(string name, double value)
         {
-            get { return this.Current; }
+            if (this.Count > 0)
+            {
+                MultiSet<T> m = new MultiSet<T>();
+                foreach (var item in this.counts)
+                {
+                    var f = item.Key.SetVariableValue(name, value);
+                    m[f as T] += item.Value;
+                }
+                return m;
+            }
+            return this.Clone() as FunctionElement;
         }
 
-        public bool MoveNext()
+        public override FunctionElement SetVariableValue(string name, FunctionElement value)
         {
-            curI++;
-            return this.curI < this.m.Count;
+            if (this.Count > 0)
+            {
+                MultiSet<T> m = new MultiSet<T>();
+                foreach (var item in this.counts)
+                {
+                    var f = item.Key.SetVariableValue(name, value);
+                    m[f as T] += item.Value;
+                }
+                return m;
+            }
+            return this.Clone() as FunctionElement;
         }
 
-        public void Reset()
+        public override VariablesMulriplication Derivative(string name)
         {
-            this.curI = 0;
+            throw new NotImplementedException();
+        }
+
+        public override VariablesMulriplication Derivative()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override double ToDouble()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool HasVariable(string name)
+        {
+            foreach (var item in this.counts)
+            {
+                if (item.Key.HasVariable(name))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public override object Clone()
+        {
+            MultiSet<T> m = new MultiSet<T>();
+            
+            foreach (var item in this.counts)
+            {
+                m.counts[item.Key.Clone() as T] = item.Value;
+            }
+            m.MathFunctions.Clear();
+            m.ForceAddFunctions(this);
+            return m;
+        }
+
+        public override bool IsVariableMultiplication()
+        {
+            return false;
+        }
+
+        public override VariablesMulriplication ToVariableMultiplication()
+        {
+            return new VariablesMulriplication(this.Clone() as MultiSet<T>);
+        }
+
+        public override string ToMathMLShort()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var item in this.counts)
+            {
+                sb.AppendFormat("{0}++", item.Key.ToMathMLShort());
+            }
+            if (sb.Length != 0)
+            {
+                sb = sb.Remove(sb.Length - 2, 2);
+            }
+            return sb.ToString();
+        }
+
+        public override bool IsLeaf()
+        {
+            return true;
+        }
+
+        public override FunctionElement ToLeaf()
+        {
+            return this;
+        }
+
+        public override bool IsConstant()
+        {
+            foreach (var item in this.counts)
+            {
+                if (!item.Key.IsConstant())
+                    return false;
+            }
+            return true;
+        }
+
+        public override void ParseFromString(string func)
+        {
+            throw new NotImplementedException();
         }
     }
 }

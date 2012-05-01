@@ -40,12 +40,18 @@
     <Compile Include="Crypt\FirstClass.cs" />
     <Compile Include="Exceptions\InvalidAttributesException.cs" />
     <Compile Include="Exceptions\InvalidColorSetAttributesException.cs" />
+    <Compile Include="Exceptions\InvalidFunctionStringException.cs" />
+    <Compile Include="Exceptions\InvalidMathFunctionParameters.cs" />
     <Compile Include="Exceptions\InvalidTokenException.cs" />
     <Compile Include="Graphic\MGraphic.cs" />
     <Compile Include="MathUtils\DoubleMatrixElement.cs" />
-    <Compile Include="MathUtils\Equation.cs" />
-    <Compile Include="MathUtils\Function.cs" />
+    <Compile Include="MathUtils\Functions\BoolVariable.cs" />
+    <Compile Include="MathUtils\Functions\EnumVariable.cs" />
+    <Compile Include="MathUtils\Functions\Equation.cs" />
+    <Compile Include="MathUtils\Functions\Function.cs" />
     <Compile Include="MathUtils\FunctionMatrixElement.cs" />
+    <Compile Include="MathUtils\Functions\RecordVariable.cs" />
+    <Compile Include="MathUtils\Functions\StringVariable.cs" />
     <Compile Include="MathUtils\Graphs\Arc.cs" />
     <Compile Include="MathUtils\Graphs\BiGraph.cs" />
     <Compile Include="MathUtils\Graphs\DirectedGraph.cs" />
@@ -64,16 +70,17 @@
     <Compile Include="MathUtils\Graphs\WeightedArc.cs" />
     <Compile Include="MathUtils\Graphs\WeightedGraph.cs" />
     <Compile Include="MathUtils\MathFunctions\IFunctionable.cs" />
-    <Compile Include="MathUtils\FunctionElement.cs" />
+    <Compile Include="MathUtils\Functions\FunctionElement.cs" />
     <Compile Include="MathUtils\MathFunctions\IMathFunction.cs" />
     <Compile Include="MathUtils\IMatrixElement.cs" />
     <Compile Include="MathUtils\InvalidMatrixSizeException.cs" />
     <Compile Include="MathUtils\MathFunctions\MathFunction.cs" />
-    <Compile Include="MathUtils\MathFunctions\PowerFunction.cs" />
-    <Compile Include="MathUtils\MathFunctions\SliceFunction.cs" />
+    <Compile Include="MathUtils\MathFunctions\MathOperator.cs" />
+    <Compile Include="MathUtils\MathFunctions\OneParameterMathFunction.cs" />
     <Compile Include="MathUtils\Matrix.cs" />
     <Compile Include="MathUtils\MatrixElementWithVariables.cs" />
     <Compile Include="MathUtils\Multiset.cs" />
+    <Compile Include="MathUtils\MultiSetEnum.cs" />
     <Compile Include="MathUtils\OptimisationMethods\FirstOrderMehods.cs" />
     <Compile Include="MathUtils\OptimisationMethods\FunctionsVariations.cs" />
     <Compile Include="MathUtils\OptimisationMethods\MinimisationMethods.cs" />
@@ -81,6 +88,7 @@
     <Compile Include="MathUtils\PetriNetsUtils\ColorSet.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\ColorSetCollection.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\ColorSetTypes.cs" />
+    <Compile Include="MathUtils\PetriNetsUtils\ColorVariable.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\ColouredPetriNet.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\ColouredPlace.cs" />
     <Compile Include="MathUtils\PetriNetsUtils\Graphs\ColouredPetriGraph.cs" />
@@ -102,8 +110,8 @@
     <Compile Include="MathUtils\SemanticNetworkUtils\Graphs\RelationDefinition.cs" />
     <Compile Include="MathUtils\SemanticNetworkUtils\Graphs\SemanticGraph.cs" />
     <Compile Include="MathUtils\SemanticNetworkUtils\SemanticNetwork.cs" />
-    <Compile Include="MathUtils\Variable.cs" />
-    <Compile Include="MathUtils\VariablesMulriplication.cs" />
+    <Compile Include="MathUtils\Functions\Variable.cs" />
+    <Compile Include="MathUtils\Functions\VariablesMulriplication.cs" />
     <Compile Include="MVC\IController.cs" />
     <Compile Include="MVC\IView.cs" />
     <Compile Include="MVC\Controller.cs" />
@@ -123,6 +131,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="MVC\Wrappers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="docs\todo.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

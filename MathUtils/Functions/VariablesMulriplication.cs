@@ -36,7 +36,7 @@ namespace MagicLibrary.MathUtils.Functions
             }
             else
             {
-                if (variable.IsConstant())
+                if (variable.IsDouble())
                 {
                     if (this.variables.Count == 0)
                     {
@@ -94,7 +94,7 @@ namespace MagicLibrary.MathUtils.Functions
                 //}
                 //else
                 {
-                    if (v.IsConstant())
+                    if (v.IsDouble())
                     {
                         d *= v.ToDouble();
                     }
@@ -234,7 +234,7 @@ namespace MagicLibrary.MathUtils.Functions
             bool isVariables = false;
             foreach (var item in this.variables)
             {
-                if (item.IsConstant())
+                if (item.IsDouble())
                 {
                     d *= item.ToDouble();
                 }
@@ -279,14 +279,8 @@ namespace MagicLibrary.MathUtils.Functions
             return e.ToString();
         }
 
-        private static int i = 0;
         public override string ToString()
         {
-            VariablesMulriplication.i++;
-            if (VariablesMulriplication.i >= 100)
-            {
-                int saa;
-            }
             if (this.Constant == 0)
                 return "0";
 
@@ -419,36 +413,18 @@ namespace MagicLibrary.MathUtils.Functions
 
                 for (int i = 0; i < v.variables.Count; i++)
                 {
-                    /*if (!v.variables[i].IsConstant())
+                    if (!this.variables.Exists(vs => vs.Equals(v.variables[i])))
                     {
-                        */
-                        if (!v.variables[i].Equals(this.GetVariableByName(v.variables[i].Name)))
-                        {
-                            return false;
-                        }
-                    /*}
-                    else
-                    {
-                        //if (v.Constant != 0 && this.variables.Exists(var => !var.IsConstant()))
-                        //    return false;
-                    }*/
+                        return false;
+                    }
                 }
 
                 for (int i = 0; i < this.variables.Count; i++)
                 {
-                    //if (!this.variables[i].IsConstant())
-                    //{
-
-                        if (!this.variables[i].Equals(v.GetVariableByName(this.variables[i].Name)))
-                        {
-                            return false;
-                        }
-                    //}
-                    //else
-                    //{
-                    //    //if (!v.variables.Exists(var => !var.IsVariable()))
-                    //    //    return false;
-                    //}
+                    if (!v.variables.Exists(vs => vs.Equals(this.variables[i])))
+                    {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -492,7 +468,7 @@ namespace MagicLibrary.MathUtils.Functions
         {
             return this.variables.Exists(v => v.Name.Equals(name) &&
                 v.MathFunctions.Last().Item1.Equals(Function.GetMathFunction("power")) &&
-                v.MathFunctions.Last().Item2[0].IsConstant() &&
+                v.MathFunctions.Last().Item2[0].IsDouble() &&
                 v.MathFunctions.Last().Item2[0].ToDouble() == degree);
         }
 
@@ -516,7 +492,7 @@ namespace MagicLibrary.MathUtils.Functions
             this.variables.ForEach(delegate(FunctionElement v)
             {
                 var temp = v.Clone() as FunctionElement;
-                if (!temp.IsConstant() && temp.HasVariable(name))
+                if (!temp.IsDouble() && temp.HasVariable(name))
                 {
                     f *= temp.SetVariableValue(name, value);
                 }
@@ -813,6 +789,44 @@ namespace MagicLibrary.MathUtils.Functions
             }
 
             return sb.ToString();
+        }
+
+        public bool IsLeaf()
+        {
+            return this.Constant == 1 && this.variables.Count == 1 && this.variables[0].IsLeaf();
+        }
+
+        public FunctionElement ToLeaf()
+        {
+            if (this.IsLeaf())
+            {
+                return this.variables[0].ToLeaf();
+            }
+            throw new Exception();
+        }
+
+        public bool IsConstant()
+        {
+            foreach (var v in this.variables)
+            {
+                if (!v.IsConstant())
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public bool IsDouble()
+        {
+            foreach (var v in this.variables)
+            {
+                if (!v.IsDouble())
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

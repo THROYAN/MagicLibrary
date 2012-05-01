@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MagicLibrary.MathUtils.Functions;
 
 namespace MagicLibrary.MathUtils
 {
@@ -9,9 +10,9 @@ namespace MagicLibrary.MathUtils
     {
         public Function Function { get; set; }
 
-        public FunctionMatrixElement(double constant = 0, string varName = "", double degree = 1)
+        public FunctionMatrixElement(double constant = 0, string varName = "")
         {
-            this.Function = new Function(constant, varName, degree);
+            this.Function = new Function(constant, varName);
         }
 
         public FunctionMatrixElement(Function f)

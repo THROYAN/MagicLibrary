@@ -28,12 +28,9 @@ namespace MagicLibrary.MathUtils.MathFunctions
             var mf = MathFunction.FromString(func);
             this.FunctionName = mf.FunctionName;
             this.Function = mf.Function;
-            this.func = mf.func;
             this.ParamsCount = mf.ParamsCount;
             this.ToStringFormat = mf.ToStringFormat;
         }
-
-        private Function func { get; set; }
 
         public static MathFunction FromString(string func)
         {
@@ -52,10 +49,28 @@ namespace MagicLibrary.MathUtils.MathFunctions
             }
             catch
             {
-                throw new Exception();
+                throw new InvalidFunctionStringException(func);
             }
 
-            string[] vars = m.Groups["params"].Value.Split(',');
+            string name = m.Groups["name"].Value;
+            string[] tempVars = m.Groups["params"].Value.Split(',');
+            string[] vars = new string[tempVars.Length];
+
+            string formatString = "";
+            for (int i = 0; i < tempVars.Length; i++)
+            {
+                formatString += "{" + i + "},";
+                vars[i] = tempVars[i].Trim();
+            }
+            if (vars.Length > 0)
+            {
+                formatString = formatString.Remove(formatString.Length - 1, 1);
+                if (vars.Length > 1)
+                {
+                    formatString = String.Format("\\({0}\\)", formatString);
+                }
+            }
+
             string[] fVars = f.Variables;
             if (vars.Length != fVars.Length)
             {
@@ -68,12 +83,12 @@ namespace MagicLibrary.MathUtils.MathFunctions
                     throw new Exception();
                 }
             }
-            return new MathFunction(m.Groups["name"].Value, vars.Length, delegate(FunctionElement[] d)
+            return new MathFunction(name, vars.Length, delegate(FunctionElement[] d)
                 {
                     Dictionary<string, FunctionElement> bindVars = new Dictionary<string, FunctionElement>();
                     for (int i = 0; i < vars.Length; i++)
                     {
-                        if (!d[i].IsConstant())
+                        if (!d[i].IsDouble())
                         {
                             var temp = d[0].Clone() as FunctionElement;
                             temp.ForceAddFunction(m.Groups["name"].Value, d.ToList().GetRange(1, vars.Length - 1).ToArray());
@@ -83,7 +98,126 @@ namespace MagicLibrary.MathUtils.MathFunctions
                     }
                     return f.SetVariablesValues(bindVars);
 
-                }, m.Groups["name"] + "{0}");
+                }, name + formatString);
+        }
+
+        public static MathFunction MultiLineFunction(string str)
+        {
+            string mask = @"^(\n\r\t)*\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*\((?<params>.*)\)\s*=\s*(?<body>(.|\n)*?)\s*$";
+
+            var m = Regex.Match(str, mask, RegexOptions.IgnorePatternWhitespace);
+
+            if (!m.Success)
+            {
+                throw new Exception();
+            }
+
+            string name = m.Groups["name"].Value;
+            //var funcs = Regex.Split(m.Groups["body"].Value, "");
+            var funcs = m.Groups["body"].Value.Split(new[] { ';', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            var tempPs = MagicLibrary.MathUtils.Functions.Function.ParseAttributes(m.Groups["params"].Value);
+            if (!MagicLibrary.MathUtils.Functions.Function.IsArrayAttributes(tempPs))
+            {
+                throw new InvalidFunctionStringException(str);
+            }
+            string[] ps = new string[tempPs.Count];
+            for (int i = 0; i < tempPs.Count; i++)
+            {
+                ps[i] = tempPs.ElementAt(i).Value;
+            }
+
+            string formatString = "";
+            for (int i = 0; i < ps.Length; i++)
+            {
+                formatString += "{" + i + "},";
+                ps[i] = ps[i].Trim();
+            }
+
+            if (ps.Length > 0)
+            {
+                formatString = formatString.Remove(formatString.Length - 1, 1);
+                if (ps.Length > 1)
+                {
+                    formatString = String.Format("\\({0}\\)", formatString);
+                }
+            }
+
+            Dictionary<string, Function> parameters = new Dictionary<string, Function>();
+            
+            int pCount = ps.Length;
+
+            var j = 0;
+            foreach (var func in funcs)
+            {
+                j++;
+                mask = @"\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*=\s*(?<body>.*)\s*";
+                m = Regex.Match(func, mask, RegexOptions.IgnorePatternWhitespace);
+
+                if (!m.Success)
+                {
+                    mask = @"\s*return\s+(?<body>.*)\s*";
+                    m = Regex.Match(func, mask, RegexOptions.IgnorePatternWhitespace);
+
+                    if (!m.Success)
+                    {
+                        throw new InvalidFunctionStringException(func);
+                    }
+                }
+
+                if (ps.Contains(m.Groups["name"].Value))
+                {
+                    throw new Exception();
+                }
+
+                Function f = new Function(m.Groups["body"].Value);
+
+                foreach (var var in f.Variables)
+                {
+                    if (!parameters.ContainsKey(var) && !ps.Contains(var))
+                    {
+                        throw new InvalidFunctionStringException(func);
+                    }
+                }
+
+                parameters.Add(m.Groups["name"].Value, f);
+
+                if (String.IsNullOrEmpty(m.Groups["name"].Value))
+                {
+                    if (j != funcs.Length)
+                    {
+                        throw new InvalidFunctionStringException(func);
+                    }
+
+                    return new MathFunction(name, pCount, delegate(FunctionElement[] d)
+                        {
+                            Dictionary<string, FunctionElement> bindVars = new Dictionary<string, FunctionElement>();
+                            
+                            for (int i = 0; i < ps.Length; i++)
+                            {
+                                if (!d[i].IsDouble())
+                                {
+                                    var temp = d[0].Clone() as FunctionElement;
+                                    temp.ForceAddFunction(name, d.ToList().GetRange(1, ps.Length - 1).ToArray());
+                                    return temp;
+                                }
+                                bindVars[ps[i]] = d[i];
+                            }
+
+                            foreach (var item in parameters)
+                            {
+                                if (String.IsNullOrEmpty(item.Key))
+                                {
+                                    return item.Value.SetVariablesValues(bindVars);
+                                }
+                                bindVars.Add(item.Key, item.Value.SetVariablesValues(bindVars));
+                            }
+                            throw new Exception();
+                        }, name + String.Format("{0}", formatString));
+                }
+            }
+
+            throw new Exception();
         }
 
         public string FunctionName { get; protected set; }
@@ -122,13 +256,13 @@ namespace MagicLibrary.MathUtils.MathFunctions
         public virtual string ToString(string name, params FunctionElement[] _params)
         {
             List<string> els = new List<string>();
-#warning ЧУШЬ блять!!!
-            var f = new Function(name);
-            if (f.IsNeedBrackets())
-            {
-                els.Add(String.Format("({0})", name));
-            }
-            else
+#warning ЧУШЬ блять!!! ага, полная! ересь блять
+            //var f = new Function(name);
+            //if (f.IsNeedBrackets())
+            //{
+            //    els.Add(String.Format("({0})", name));
+            //}
+            //else
             {
                 els.Add(name);
             }

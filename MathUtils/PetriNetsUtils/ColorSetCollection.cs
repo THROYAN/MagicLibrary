@@ -8,17 +8,19 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
 {
     public class ColorSetCollection : IEnumerable<ColorSet>
     {
+        public List<ColorVariable> ColorVariables { get; set; }
         private List<ColorSet> colorSets { get; set; }
 
         public ColorSetCollection()
         {
             this.colorSets = new List<ColorSet>();
+            this.ColorVariables = new List<ColorVariable>();
+
         }
 
         public ColorSetCollection(string colorsDescription)
+            : this()
         {
-            this.colorSets = new List<ColorSet>();
-
             this.LoadColorsFromString(colorsDescription);
         }
 
@@ -33,8 +35,8 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             var cs = Regex.Split(colorsDescription, "(\n|\t|\r)");
             foreach (var c in cs)
             {
-                if(!Regex.IsMatch(c, "^\\s*$"))
-                    new ColorSet(c, this);
+                if (!Regex.IsMatch(c, "^\\s*$"))
+                    this.AddColorSet(new ColorSet(c, this));
             }
         }
 
@@ -43,6 +45,25 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             if (!this.colorSets.Contains(cs) && !this.Contains(cs.Name))
             {
                 this.colorSets.Add(cs);
+                switch (cs.Type)
+                {
+                    case ColorSetType.Enum:
+                        foreach (var item in cs.ParsedAttributes)
+                        {
+                            this.AddVariable(item.Value, cs.Name);
+                        }
+
+                        break;
+                    case ColorSetType.Bool:
+                        this.AddVariable(cs.ParsedAttributes[ColorSet.TrueStringAttribute], cs.Name);
+                        this.AddVariable(cs.ParsedAttributes[ColorSet.FalseStringAttribute], cs.Name);
+                        this.AddVariable(ColorSet.TrueDefault, cs.Name);
+                        this.AddVariable(ColorSet.FalseDefault, cs.Name);
+                        break;
+                    case ColorSetType.Unit:
+                        this.AddVariable(cs.ParsedAttributes[ColorSet.NameAttribute], cs.Name);
+                        break;
+                }
             }
         }
 
@@ -93,6 +114,29 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             }
 
             return String.Format("{1}{0}{2}", sb.ToString(), leftString, rightString);
+        }
+
+        public bool HasVariable(string name)
+        {
+            return this.ColorVariables.Exists(cv => cv.Name.Equals(name));
+        }
+
+        public bool HasVariable(string name, ColorSet colorSet)
+        {
+            return this.ColorVariables.Exists(cv => cv.Name.Equals(name) && cv.ColorSet == colorSet);
+        }
+
+        public void AddVariable(string name, string colorName)
+        {
+            if (!this.HasVariable(name) && !String.IsNullOrEmpty(name) && !name.Equals(ColorSet.EmptyAttribute))
+            {
+                this.ColorVariables.Add(new ColorVariable(name, this[colorName]));
+            }
+        }
+
+        public ColorVariable GetVariable(string name)
+        {
+            return this.ColorVariables.Find(cv => cv.Name.Equals(name));
         }
     }
 }

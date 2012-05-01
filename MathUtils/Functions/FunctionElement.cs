@@ -13,6 +13,12 @@ namespace MagicLibrary.MathUtils.Functions
 
         public abstract string Name { get; }
 
+        protected bool _isModified;
+
+        public abstract void ParseFromString(string func);
+
+        public abstract bool IsDouble();
+
         public abstract bool IsConstant();
 
         public abstract FunctionElement Pow(double power);
@@ -134,6 +140,7 @@ namespace MagicLibrary.MathUtils.Functions
 
         public abstract object Clone();
 
+#warning это ооочень медленно
         public override bool Equals(object obj)
         {
             if (obj == null)
@@ -160,13 +167,25 @@ namespace MagicLibrary.MathUtils.Functions
 
                 for (int i = 0; i < mf.Item2.Length; i++)
                 {
-                    _params[i] = mf.Item2[i];
+                    _params[i + 1] = mf.Item2[i];
                 }
 
                 result = mf.Item1.Calculate(_params).ToDouble();
             }
 
             return result;
+        }
+
+        public FunctionElement Recalc()
+        {
+            var res = this.Clone() as FunctionElement;
+            res.MathFunctions.Clear();
+
+            foreach (var mf in this.MathFunctions)
+            {
+                res = res.ApplyFunction(mf.Item1.FunctionName, mf.Item2);
+            }
+            return res;
         }
 
         public bool SameMathFunctionsWith(FunctionElement e)
@@ -199,7 +218,7 @@ namespace MagicLibrary.MathUtils.Functions
         /// <returns></returns>
         public bool CanBeCalculated()
         {
-            if (!this.IsConstant())
+            if (!this.IsDouble())
             {
                 return false;
             }
@@ -267,6 +286,7 @@ namespace MagicLibrary.MathUtils.Functions
         /// <returns></returns>
         public void ForceAddFunction(string funcName, params FunctionElement[] parameters)
         {
+            this._isModified = true;
             this.MathFunctions.Add(new Tuple<IMathFunction, FunctionElement[]>(Function.GetMathFunction(funcName), parameters));
         }
 
@@ -315,6 +335,7 @@ namespace MagicLibrary.MathUtils.Functions
 
         public void CopyFunctions(FunctionElement e)
         {
+            this._isModified = true;
             this.MathFunctions.Clear();
             this.ForceAddFunctions(e);
         }
@@ -346,6 +367,7 @@ namespace MagicLibrary.MathUtils.Functions
         /// <param name="e"></param>
         public void ForceAddFunctions(FunctionElement e)
         {
+            this._isModified = true;
             foreach (var mf in e.MathFunctions)
             {
                 FunctionElement[] _params = new FunctionElement[mf.Item2.Length];
@@ -369,9 +391,13 @@ namespace MagicLibrary.MathUtils.Functions
             string s = this.Name;
             foreach (var mf in this.MathFunctions)
             {
-                s = mf.Item1.ToString(String.Format("({0})", s), mf.Item2);
+                s = mf.Item1.ToString(s, mf.Item2);
             }
             return s;
         }
+
+        public abstract bool IsLeaf();
+
+        public abstract FunctionElement ToLeaf();
     }
 }

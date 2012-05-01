@@ -40,7 +40,7 @@ namespace MagicLibrary.MathUtils.Functions
 
                     var f = func.Clone() as FunctionElement;
 
-                    bool powerIsConstant = power.IsConstant();
+                    bool powerIsConstant = power.IsDouble();
                     // степень 1
                     if (powerIsConstant && power.ToDouble() == 1)
                     {
@@ -51,7 +51,7 @@ namespace MagicLibrary.MathUtils.Functions
                         return new Function(1);
                     }
                     // Если возводим число в степень число
-                    if (powerIsConstant && f.IsConstant())
+                    if (powerIsConstant && f.IsDouble())
                     {
                         return new Function(Math.Pow(f.ToDouble(), power.ToDouble()));
                     }
@@ -71,11 +71,11 @@ namespace MagicLibrary.MathUtils.Functions
                     return f;
                     
                 }, "\\^"),
-                new PrefixMathFunction("cos", delegate(FunctionElement func)
+                new OneParameterMathFunction("cos", delegate(FunctionElement func)
                     {
                         var f = func.Clone() as FunctionElement;
 
-                        if(f.IsConstant())
+                        if(f.IsDouble())
                         {
                             return new Function(Math.Cos(f.ToDouble()));
                         }
@@ -84,15 +84,174 @@ namespace MagicLibrary.MathUtils.Functions
                         return f;
 
                     }, "cos{0}"),
+                #region Relations
+                new MathOperator("equals", delegate(FunctionElement e1, FunctionElement e2)
+                    {
+                        var v1 = e1.ToLeaf() as FunctionElement;
+                        var v2 = e2.ToLeaf() as FunctionElement;
+
+                        if (v1 is Variable || v2 is Variable)
+                        {
+                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
+                            {
+                                return new Function("true");
+                            }
+                        }
+
+                        if (v1.IsConstant() && v2.IsConstant())
+                        {
+                            return new Function(v1.Equals(v2) ? "true" : "false");
+                        }
+
+                        var temp = e1.Clone() as FunctionElement;
+                        temp.ForceAddFunction("equals", e2.Clone() as FunctionElement);
+                        return temp;
+
+                    }, "=="),
+                    new MathOperator("less then", delegate(FunctionElement e1, FunctionElement e2)
+                    {
+                        var v1 = e1.ToLeaf() as FunctionElement;
+                        var v2 = e2.ToLeaf() as FunctionElement;
+
+                        if (v1 is Variable || v2 is Variable)
+                        {
+                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
+                            {
+                                return new Function("false");
+                            }
+                        }
+
+                        if (v1.IsDouble() && v2.IsDouble())
+                        {
+                            return new Function(v1.ToDouble() < v2.ToDouble() ? "true" : "false");
+                        }
+
+                        var temp = e1.Clone() as FunctionElement;
+                        temp.ForceAddFunction("less then", e2.Clone() as FunctionElement);
+                        return temp;
+
+                    }, "<"),
+                    new MathOperator("greater then", delegate(FunctionElement e1, FunctionElement e2)
+                    {
+                        var v1 = e1.ToLeaf() as FunctionElement;
+                        var v2 = e2.ToLeaf() as FunctionElement;
+
+                        if (v1 is Variable || v2 is Variable)
+                        {
+                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
+                            {
+                                return new Function("false");
+                            }
+                        }
+
+                        if (v1.IsDouble() && v2.IsDouble())
+                        {
+                            return new Function(v1.ToDouble() > v2.ToDouble() ? "true" : "false");
+                        }
+
+                        var temp = e1.Clone() as FunctionElement;
+                        temp.ForceAddFunction("greater then", e2.Clone() as FunctionElement);
+                        return temp;
+
+                    }, ">"),
+                    new MathOperator("less or equals", delegate(FunctionElement e1, FunctionElement e2)
+                    {
+                        var v1 = e1.ToLeaf() as FunctionElement;
+                        var v2 = e2.ToLeaf() as FunctionElement;
+
+                        if (v1 is Variable || v2 is Variable)
+                        {
+                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
+                            {
+                                return new Function("true");
+                            }
+                        }
+
+                        if (v1.IsDouble() && v2.IsDouble())
+                        {
+                            return new Function(v1.ToDouble() <= v2.ToDouble() ? "true" : "false");
+                        }
+
+                        if (v1.IsConstant() && v2.IsConstant())
+                        {
+                            return new Function(v1.Equals(v2) ? "true" : "false");
+                        }
+
+                        var temp = e1.Clone() as FunctionElement;
+                        temp.ForceAddFunction("less or equals", e2.Clone() as FunctionElement);
+                        return temp;
+
+                    }, "<="),
+                    new MathOperator("greater or equals", delegate(FunctionElement e1, FunctionElement e2)
+                    {
+                        var v1 = e1.ToLeaf() as FunctionElement;
+                        var v2 = e2.ToLeaf() as FunctionElement;
+
+                        if (v1 is Variable || v2 is Variable)
+                        {
+                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
+                            {
+                                return new Function("true");
+                            }
+                        }
+
+                        if (v1.IsDouble() && v2.IsDouble())
+                        {
+                            return new Function(v1.ToDouble() >= v2.ToDouble() ? "true" : "false");
+                        }
+
+                        if (v1.IsConstant() && v2.IsConstant())
+                        {
+                            return new Function(v1.Equals(v2) ? "true" : "false");
+                        }
+
+                        var temp = e1.Clone() as FunctionElement;
+                        temp.ForceAddFunction("greater or equals", e2.Clone() as FunctionElement);
+                        return temp;
+
+                    }, ">="),
+                    new MathOperator("not equals", delegate(FunctionElement e1, FunctionElement e2)
+                    {
+                        var v1 = e1.ToLeaf() as FunctionElement;
+                        var v2 = e2.ToLeaf() as FunctionElement;
+
+                        if (v1 is Variable || v2 is Variable)
+                        {
+                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
+                            {
+                                return new Function("false");
+                            }
+                        }
+
+                        if (v1.IsConstant() && v2.IsConstant())
+                        {
+                            return new Function(v1.Equals(v2) ? "false" : "true");
+                        }
+
+                        var temp = e1.Clone() as FunctionElement;
+                        temp.ForceAddFunction("not equals", e2.Clone() as FunctionElement);
+                        return temp;
+
+                    }, "!="),
+                    #endregion
         };
-#endregion
+        #endregion
+
+        //private static List<IMathFunction> _allVariables = new List<IMathFunction>()
+        //{
+        //    new OneParameterMathFunction("var", delegate(FunctionElement e)
+        //        {
+        //            return new Variable("");
+
+        //        }, "\\{0}"),
+        //};
 
         public static IMathFunction GetMathFunction(string name)
         {
             return Function._allFunctions.Find(mf => mf.FunctionName.Equals(name));
         }
 
-        public static void RegisterFunction(IMathFunction func)
+        public static void RegisterMathFunction(IMathFunction func)
         {
             if (Function.GetMathFunction(func.FunctionName) != null)
             {
@@ -101,12 +260,256 @@ namespace MagicLibrary.MathUtils.Functions
             Function._allFunctions.Add(func);
         }
 
+        public static bool IsArrayAttributes(string attrs)
+        {
+            return Function.ParseAttributes(attrs).ContainsKey(Function.KeyOfIndex(1));
+        }
+
+        public static bool IsArrayAttributes(Dictionary<string, string> attrs)
+        {
+            return attrs.ContainsKey(Function.KeyOfIndex(1));
+        }
+
+        private const string _stringMask = "[_s{0}]";
+        private const string _innerAttrsMask = "[_iA{0}]";
+        private const string _funcMask = "[_f{0}]";
+        private const string _paramsMask = "[_p{0}]";
+
+        public const string MaskOfArrayAttributes = "[{0}]";
+        
+        private const string _openBracer = "{";
+        private const string _closeBracer = "}";
+
+        /// <summary>
+        /// Разбиение строки аттрибутов, на строки, содержащие по одному аттрибуту
+        /// </summary>
+        /// <param name="attrs">Строка аттрибутов</param>
+        /// <returns>Массив строк аттрибутов</returns>
+        private static string[] parseAttributes(string attributes, List<string> ass)
+        {
+            string attrs = attributes;
+            string mask = String.Format(@".*(?<all>{0}(?<innerAttrs>.*?){1})", Regex.Escape(Function._openBracer), Regex.Escape(Function._closeBracer));
+
+            var m = Regex.Match(attrs, mask);
+
+            while (m.Success)
+            {
+                string innerAttrs = m.Groups["innerAttrs"].Value;
+                string[] ss2 = Function.parseAttributes(innerAttrs, ass);
+                attrs = attrs.Replace(m.Groups["all"].Value, String.Format(Function._innerAttrsMask, ass.Count));
+
+                StringBuilder sb = new StringBuilder();
+                foreach (var s in ss2)
+                {
+                    sb.AppendFormat("{0},", s);
+                }
+                if (sb.Length > 0)
+                {
+                    sb = sb.Remove(sb.Length - 1, 1);
+                }
+                ass.Add(sb.ToString());
+
+                m = Regex.Match(attrs, mask);
+            };
+
+            var ss = attrs.Split(',');
+
+            //for (int i = 0; i < ass.Count; i++)
+            //{
+            //    for (int j = 0; j < ss.Length; j++)
+            //    {
+            //        ss[j] = ss[j].Replace(String.Format("[_iA{0}]", i), ass[i]);
+            //    }
+            //}
+            return ss;
+        }
+
+        /// <summary>
+        /// Парсинг аттрибутов из строки аттрибутов.
+        /// Аттрибуты записываются через ','.
+        /// </summary>
+        /// <param name="attrs">Аттрибуты в виде строки</param>
+        /// <returns>Словарь, где ключи - это имена аттрибутов, а значения - это значения аттрибутов.</returns>
+        public static Dictionary<string, string> ParseAttributes(string attributes)
+        {
+            string attrs = attributes;
+            Dictionary<string, string> d = new Dictionary<string, string>();
+            if (Regex.IsMatch(attrs, @"^\s?$"))
+                return d;
+
+            // Вложенные аттрибуты
+            List<string> ass = new List<string>();
+            // строки на замену
+            List<string> ss = new List<string>();
+            string mask = @".*?(?<str>\'.*?\')";
+
+            var m = Regex.Match(attrs, mask);
+
+            while (m.Success)
+            {
+                attrs = attrs.Replace(m.Groups["str"].Value, String.Format("[_s{0}]", ss.Count));
+                ss.Add(m.Groups["str"].Value);
+
+                m = Regex.Match(attrs, mask);
+            }
+
+            var pAttrs = parseAttributes(attrs, ass);
+
+            int i = 0, j = 0;
+            foreach (var attr in pAttrs)
+            {
+                var pAttr = parseAttribute(attr, ss, ass);
+
+                // array attrs
+                if (pAttr.Key == "")
+                {
+                    // Если где-то в середине был именованный аттрибут, то это плохо
+                    if (i != j)
+                    {
+                        throw new InvalidAttributesException(attrs, "<?>");
+                    }
+                    d.Add(Function.KeyOfIndex(++i), pAttr.Value);
+                }
+                else
+                {
+                    // Если был массив, а тут появился именованный аттрибут
+                    if (i != 0)
+                    {
+                        throw new InvalidAttributesException(attrs, "<?>");
+                    }
+
+                    // Повторяющиеся аттрибуты - это лажа
+                    if (d.ContainsKey(pAttr.Key))
+                    {
+                        throw new InvalidAttributesException(attrs, "<?>");
+                    }
+
+                    d.Add(pAttr.Key, pAttr.Value);
+                }
+                j++;
+            }
+
+            return d;
+        }
+
+        /// <summary>
+        /// Парсинг аттрибута из строки, содержащей 1 аттрибут.
+        /// 1) Имя=Значение
+        /// 2) Значение
+        /// 3) Имя = 'Значение'
+        /// 4) Имя: "Значение"
+        /// ...
+        /// </summary>
+        /// <param name="attr">Аттрибут, в виде строки</param>
+        /// <returns>Пара - имя и значение аттрибута</returns>
+        private static KeyValuePair<string, string> parseAttribute(string attribute, List<string> ss, List<string> ass)
+        {
+            string attr = attribute;
+
+            //for (int i = 0; i < ss.Count; i++)
+            //{
+            //    attr = attr.Replace(String.Format(ColorSet._stringMask, i), ss[i]);
+            //}
+
+            if (Regex.IsMatch(attr, @"^\s?$"))
+            {
+                return new KeyValuePair<string, string>("", "");
+            }
+            string[] patterns = new string[] {
+                //"^\\s*(?<name>\\w.*)\\s*[=:]\\s*\"(?<value>.+)\"\\s*$", // Name ="+asd"
+                @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*(?<value>'.+')\s*$", // name = '2asd'
+                @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*(?<value>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*$", // Name = asd2
+                @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*(?<value>-?\d+)\s*$", // MinLength = -12
+                String.Format(
+                        @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*{0}\s*$",
+                        Regex.Escape(String.Format(Function._innerAttrsMask, "```")).Replace("```", "(?<iAIndex>\\d+)")
+                ),
+                String.Format(
+                        @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*{0}\s*$",
+                        Regex.Escape(String.Format(Function._stringMask, "```")).Replace("```", "(?<sIndex>\\d+)")
+                ),
+                //"^\\s*\"(?<value>.+)\"\\s*$", // "asd2"
+                @"^\s*(?<value>'.+')\s*$", // 'asd2'
+                String.Format(
+                        @"^\s*{0}\s*$",
+                        Regex.Escape(String.Format(Function._innerAttrsMask, "```")).Replace("```", "(?<iAIndex>\\d+)")
+                ),
+                String.Format(
+                        @"^\s*{0}\s*$",
+                        Regex.Escape(String.Format(Function._stringMask, "```")).Replace("```", "(?<sIndex>\\d+)")
+                ),
+                @"^\s*(?<value>-?\d+)\s*$", // 15
+                @"^\s*(?<value>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*$", // asd2
+            };
+            Match m = null;
+            foreach (var pattern in patterns)
+            {
+                m = Regex.Match(attr, pattern);
+                if (m.Success)
+                {
+                    break;
+                }
+            }
+
+            if (m == null || !m.Success)
+            {
+                throw new InvalidAttributesException(attr, "<?>");
+            }
+
+            string name = m.Groups["name"].Value.Trim();
+
+            if (name == null)
+            {
+                name = "";
+            }
+            string value = "";
+            if (m.Groups["iAIndex"].Success)
+            {
+                value = ass[Int32.Parse(m.Groups["iAIndex"].Value)];
+                var temp = Function.parseAttributes(value, ass);
+                StringBuilder sb = new StringBuilder();
+                foreach (var temp2 in temp)
+                {
+                    var a = Function.parseAttribute(temp2, ss, ass);
+                    sb.AppendFormat("{0}={1},", a.Key, a.Value);
+                }
+                sb = sb.Remove(sb.Length - 1, 1);
+                value = String.Format("{1}{0}{2}", sb.ToString(), Function._openBracer, Function._closeBracer);
+            }
+            else
+            {
+                if (m.Groups["sIndex"].Success)
+                {
+                    value = ss[Int32.Parse(m.Groups["sIndex"].Value)];
+                }
+                else
+                {
+                    value = m.Groups["value"].Value.Trim();
+                }
+            }
+
+
+            return new KeyValuePair<string, string>(name, value);
+        }
+
+        /// <summary>
+        /// Имя индексного аттрибута (массива)
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public static string KeyOfIndex(int index)
+        {
+            return String.Format(Function.MaskOfArrayAttributes, index);
+        }
+
         private List<VariablesMulriplication> variables;
+        private List<VariablesMulriplication> notNullVariables { get { return this.variables.Where(vs => vs.Constant != 0).ToList(); } }
 
         private void _initProperties()
         {
             this.MathFunctions = new List<Tuple<IMathFunction, FunctionElement[]>>();
             this.variables = new List<VariablesMulriplication>();
+            this._isModified = true;
         }
 
         public Function(double constant = 0, string varName = "")
@@ -145,6 +548,7 @@ namespace MagicLibrary.MathUtils.Functions
         public void ReplaceThisWithElement(FunctionElement el)
         {
             this._initProperties();
+            this._isModified = true;
 
             if (el is Function)
             {
@@ -160,26 +564,124 @@ namespace MagicLibrary.MathUtils.Functions
 
         public static Function FromString(string func)
         {
+            List<Function> fs = new List<Function>();
+
+            try
+            {
+                return Function._fromString(func, fs);
+            }
+            catch(InvalidFunctionStringException)
+            {
+                throw new InvalidFunctionStringException(func);
+            }
+        }
+
+        private static Function _fromString(string func, List<Function> fs)
+        {
             string f = func;
-            string mask = @".*(?<all>\(\s*(?<function>.+?)\))";
+
+            // Ищем все строки в одинарных кавычках
+            List<string> ss = new List<string>();
+            string mask = @".*?(?<str>\'.*?\')";
 
             var m = Regex.Match(f, mask);
 
-            List<Function> fs = new List<Function>();
-
-            // Все скобки заменяем на ссылки на функции
             while (m.Success)
             {
-                f = f.Replace(m.Groups["all"].Value, String.Format("[_f{0}]", fs.Count));
-                fs.Add(new Function(Function._fromStringWitoutBracers(m.Groups["function"].Value, fs)));
+                // скрываем их, чтобы не мешали своими скобками и запятыми
+                f = f.Replace(m.Groups["str"].Value, String.Format(Function._stringMask, ss.Count));
+                ss.Add(m.Groups["str"].Value);
 
                 m = Regex.Match(f, mask);
             }
 
-            //for (int i = 0; i < fs.Count; i++)
-            //{
-            //    f = f.Replace(String.Format("[_f{0}]", i), String.Format("(_f{0})", i));
-            //}
+            // теперь ищем все параметры функций (больше 1-го параметра), тоесть что-то в скобках и через запятую
+            mask = @".*(?<all>\(\s*(?<params>.*,.*?)\))";
+
+            m = Regex.Match(f, mask);
+
+            List<string> ps = new List<string>();
+
+            while (m.Success)
+            {
+                // тоже скрываем их
+                f = f.Replace(m.Groups["all"].Value, String.Format(Function._paramsMask, ps.Count));
+                ps.Add(m.Groups["params"].Value);
+
+                m = Regex.Match(f, mask);
+            }
+
+            // теперь разбираем все выражения в скобках
+            mask = @".*(?<all>\(\s*(?<function>.+?)\))";
+
+            m = Regex.Match(f, mask);
+            // Все скобки заменяем на ссылки на функции
+            while (m.Success)
+            {
+                string function = m.Groups["function"].Value;
+
+                // выбрасываем обратно параметры, потому что они могут быть в этих скобках
+                for (int i = 0; i < ps.Count; i++)
+                {
+                    function = function.Replace(String.Format(Function._paramsMask, i), String.Format("({0})", ps[i]));
+                }
+
+                // и строки выбрасываем, чтобы не тащить их за собой повсюду... хотя не знаю что лучше
+                for (int i = 0; i < ss.Count; i++)
+                {
+                    function = function.Replace(String.Format(Function._stringMask, i), ss[i]);
+                }
+
+                // парсим внутренность этих скобок, результат сохраняем в fs
+                fs.Add(Function._fromString(function, fs));
+                // и скрываем всю скобку
+                f = f.Replace(m.Groups["all"].Value, String.Format(Function._funcMask, fs.Count - 1));
+
+                m = Regex.Match(f, mask);
+            }
+            
+            // когда осталось "голое" выражение (без скобок)
+            // пересчитываем все параметры, т.е. каждое выражение через запятую
+            for (int i = 0; i < ps.Count; i++)
+            {
+                // если эти параметры - это параметры функции, которая была в скобках, то их пересчитывать уже не нужно
+                if (f.IndexOf(String.Format(Function._paramsMask, i)) != -1)
+                {
+                    var pss = ps[i].Split(',');
+                    string res = "";
+                    // разбираем каждый параметр отдельно
+                    foreach (var p in pss)
+                    {
+                        string p1 = p;
+                        // возвращаем все строки в параметр
+                        for (int j = 0; j < ss.Count; j++)
+                        {
+                            p1 = p1.Replace(String.Format(Function._stringMask, j), ss[j]);
+                        }
+
+                        // и сейчас вот послушайте... еще в каждом параметре могут быть другие параметры....яебал
+                        for (int g = 0; g < ps.Count; g++)
+                        {
+                            p1 = p1.Replace(String.Format(Function._paramsMask, g), String.Format("({0})", ps[g]));
+                        }
+
+                        // результат сохраняем в fs
+                        fs.Add(Function._fromString(p1, fs));
+                        // вместо параметра записываем ссылку на его функцию в fs
+                        res += String.Format(Function._funcMask, fs.Count - 1) + ",";
+                    }
+
+                    res = res.Remove(res.Length - 1, 1);
+
+                    // заменяем все параметры на их ссылки + скобки
+                    f = f.Replace(String.Format(Function._paramsMask, i), String.Format("({0})", res));
+                }
+            }
+
+            for (int i = 0; i < ss.Count; i++)
+            {
+                f = f.Replace(String.Format(Function._stringMask, i), ss[i]);
+            }
 
             return Function._fromStringWitoutBracers(f, fs);
         }
@@ -188,12 +690,18 @@ namespace MagicLibrary.MathUtils.Functions
         {
             string f = func.Trim();
 
-            string mask = @"^\[_f(?<index>\d+)\]$";
+            string _fMask = String.Format("^{0}$", Regex.Escape(String.Format(Function._funcMask, "```")).Replace("```", "(?<index>\\d+)"));
+            string mask = _fMask;//@"^\[_f(?<index>\d+)\]$";
             var m = Regex.Match(f, mask);
 
             if (m.Success)
             {
-                return fs[Int32.Parse(m.Groups["index"].Value)];
+                var index = Int32.Parse(m.Groups["index"].Value);
+                if (index >= fs.Count)
+                {
+                    throw new InvalidFunctionStringException(func);
+                }
+                return fs[index];
             }
 
             // check math functions
@@ -211,13 +719,23 @@ namespace MagicLibrary.MathUtils.Functions
 
                 if (m.Success)
                 {
-                    FunctionElement[] _params = new FunctionElement[mf.ParamsCount];
-                    for (int i = 0; i < mf.ParamsCount; i++)
+                    try
                     {
-                        _params[i] = Function._fromStringWitoutBracers(m.Groups[String.Format("p{0}", i)].Value, fs);
-                    }
+                        FunctionElement[] _params = new FunctionElement[mf.ParamsCount];
+                        for (int i = 0; i < mf.ParamsCount; i++)
+                        {
+                            _params[i] = Function._fromStringWitoutBracers(m.Groups[String.Format("p{0}", i)].Value, fs);
+                        }
 
-                    return new Function(mf.Calculate(_params));
+                        try
+                        {
+                            return new Function(mf.Calculate(_params));
+                        } // Skip this, because it can be other function with same signature.. Блять, прям перегрузка функций
+                        catch (InvalidMathFunctionParameters)
+                        { }
+                    }
+                    catch (InvalidFunctionStringException)
+                    { }
                 }
             }
 
@@ -234,21 +752,44 @@ namespace MagicLibrary.MathUtils.Functions
             // Variable
             try
             {
-                return Variable.ParseFromString(f);
+                var v = new Variable("");
+                v.ParseFromString(f);
+                return new Function(v);
             }
             catch { }
 
             try
             {
-                return StringVariable.ParseFromString(f);
+                var s = new StringVariable("");
+                s.ParseFromString(f);
+                return new Function(s);
             }
             catch { }
 
-            throw new Exception("Invalid string");
+            try
+            {
+                if (f.Contains('{'))
+                {
+                    for (int i = 0; i < fs.Count; i++)
+                    {
+                        if (f.IndexOf(String.Format(Function._funcMask, i)) != -1)
+                        {
+                            f = f.Replace(String.Format(Function._funcMask, i), String.Format("({0})", fs[i].ToString()));
+                        }
+                    }
+                    var v = new RecordVariable(f);
+                    return new Function(v);
+                }
+            }
+            catch { }
+
+            throw new InvalidFunctionStringException(func);
         }
 
         public void AddVariablesMul(VariablesMulriplication variablesMulriplication)
         {
+            this._isModified = true;
+
             var temp = variablesMulriplication.ToString();
             if (temp == "0" || temp == "")
                 return;
@@ -320,7 +861,7 @@ namespace MagicLibrary.MathUtils.Functions
 
         public Function ForceMul(FunctionElement e)
         {
-            if (e.IsConstant() && e.ToDouble() == 1)
+            if (e.IsDouble() && e.ToDouble() == 1)
             {
                 return this.Clone() as Function;
             }
@@ -558,10 +1099,9 @@ namespace MagicLibrary.MathUtils.Functions
                 }
             }
             
-
             var temp = new Function(vars.ToArray());
-            temp.CopyFunctions(this);
-
+            temp.MathFunctions.Clear();
+            temp.ForceAddFunctions(this);
             return temp;
         }
 
@@ -586,8 +1126,17 @@ namespace MagicLibrary.MathUtils.Functions
 
         public override double ToDouble()
         {
-            var v = this.variables.Find(vs => vs.VarsCount == 0 && vs.Constant != 0);
-            return v == null ? 0 : this.Calculate(v.Constant);
+            if (this.variables.Count(vs => vs.Constant != 0) == 1)
+            {
+                var v = this.variables.Find(vs => vs.Constant != 0);
+                return v.Constant * v[0].ToDouble();
+            }
+            if (this.variables.Count(vs => vs.Constant != 0) == 0)
+            {
+                return 0;
+            }
+            //var v = this.variables.Find(vs => vs.VarsCount == 0 && vs.Constant != 0);
+            throw new Exception();
         }
 
         public FunctionElement SetVariablesValues(Dictionary<string, double> dict)
@@ -599,7 +1148,7 @@ namespace MagicLibrary.MathUtils.Functions
                 e = e.SetVariableValue(item.Key, item.Value) as Function;
             }
 
-            if (e.IsConstant())
+            if (e.IsDouble())
             {
                 return new Function(e.Calculate(e.ToDouble()));
             }
@@ -860,7 +1409,7 @@ namespace MagicLibrary.MathUtils.Functions
                 e = e.SetVariableValue(item.Key, item.Value);
             }
 
-            if (e.IsConstant())
+            if (e.IsDouble())
             {
                 return new Function(e.Calculate(e.ToDouble()));
             }
@@ -876,7 +1425,7 @@ namespace MagicLibrary.MathUtils.Functions
                 e = e.SetVariableValue(item.Key, item.Value) as Function;
             }
 
-            if (e.IsConstant())
+            if (e.IsDouble())
             {
                 return new Function(e.Calculate(e.ToDouble()));
             }
@@ -913,7 +1462,16 @@ namespace MagicLibrary.MathUtils.Functions
             this.variables.ForEach(v => newF += v.SetVariableValue(name, e));
             //newF.Degree = this.Degree;
             //newF.Functions = new List<MathFunctions.IMathFunction>(this.Functions);
-            return newF.ApplyFunctions(this);
+            newF.ForceAddFunctions(this);
+            foreach (var mf in newF.MathFunctions)
+            {
+                for (int i = 0; i < mf.Item2.Length; i++)
+                {
+                    mf.Item2[i] = mf.Item2[i].SetVariableValue(name, e);
+                }
+            }
+
+            return newF.Recalc();
         }
 
         public override VariablesMulriplication Derivative(string name)
@@ -982,7 +1540,7 @@ namespace MagicLibrary.MathUtils.Functions
         {
             StringBuilder sb = new StringBuilder();
 
-            if (this.IsConstant())
+            if (this.IsDouble())
             {
                 return String.Format("<math><mrow><mi>{0}</mi></mrow></math>", this.ToDouble());
             }
@@ -1032,10 +1590,16 @@ namespace MagicLibrary.MathUtils.Functions
             }
         }
 
+        private string[] varNames = null;
         public string[] Variables
         {
             get
             {
+                if (!this._isModified && this.varNames != null)
+                {
+                    return this.varNames;
+                }
+                
                 List<string> vars = new List<string>();
                 this.variables.ForEach(delegate(VariablesMulriplication vs)
                 {
@@ -1044,11 +1608,40 @@ namespace MagicLibrary.MathUtils.Functions
                         foreach (string var in vs.Variables)
                         {
                             if (!vars.Contains(var))
+                            {
                                 vars.Add(var);
+                            }
                         }
                     }
                 });
-                return vars.ToArray();
+                foreach (var mf in this.MathFunctions)
+                {
+                    foreach (var f in mf.Item2)
+                    {
+                        if (f is Function)
+                        {
+                            foreach (var var in (f as Function).Variables)
+                            {
+                                if (!vars.Contains(var))
+                                {
+                                    vars.Add(var);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (!f.IsConstant() && !vars.Contains(f.Name))
+                            {
+                                vars.Add(f.Name);
+                            }
+                        }
+                    }
+                }
+
+                this._isModified = false;
+                this.varNames = vars.ToArray();
+
+                return this.varNames;
             }
         }
 
@@ -1056,12 +1649,23 @@ namespace MagicLibrary.MathUtils.Functions
         {
             if (obj is Function)
             {
-                Function f = obj as Function;
-                foreach (var vs in this.variables)
+                Function f = (obj as Function).Clone() as Function;
+
+                if (this.notNullVariables.Count != f.notNullVariables.Count || !this.SameMathFunctionsWith(f))
                 {
-                    f -= vs;
+                    return false;
                 }
-                return f.VarsCount == 0 && f.ToDouble() == 0;
+
+                foreach (var vs in this.notNullVariables)
+                {
+                    var vs2 = f.variables.Find(v => v.Equals(vs));
+                    if (vs2 == null)
+                    {
+                        return false;
+                    }
+                    f.variables.Remove(vs2);
+                }
+                return f.notNullVariables.Count == 0;
             }
             return base.Equals(obj);
         }
@@ -1085,20 +1689,22 @@ namespace MagicLibrary.MathUtils.Functions
             return m;
         }
 
+        private string name = null;
         public override string Name
         {
             get
             {
+                if (!this._isModified && !String.IsNullOrEmpty(this.name))
+                {
+                    return this.name;
+                }
+
                 if (this.variables.Count == 0)
                     return "0";
-                if (this.VarsCount == 0)
-                    return this.ToDouble().ToString();
-
+                
                 StringBuilder sb = new StringBuilder();
 
                 bool first = true;
-
-                //this.variables.Sort(new Comparison<VariablesMulriplication>((v1, v2) => v1.
 
                 foreach (var vars in this.variables)
                 {
@@ -1107,21 +1713,33 @@ namespace MagicLibrary.MathUtils.Functions
                     {
                         if (!first && constant > 0)
                             sb.Append(" + ");
-                        //if (constant != 1 || vars.VarsCount == 0)
-                        //    sb.AppendFormat("{0}{1}", constant < 0 ? " - " : "", Math.Abs(constant));
                         if (constant != 0)
                             sb.Append(vars.ToString());
                         first = false;
                     }
                 }
 
-                return sb.ToString(); // this.showFunctions(sb.ToString());
+                this._isModified = false;
+                this.name = sb.ToString();
+                return this.name;
             }
         }
 
-        public override bool IsConstant()
+        public override bool IsDouble()
         {
-            return this.Variables.Length == 0;
+            if (this.MathFunctions.Count != 0)
+            {
+                return false;
+            }
+            foreach (var vs in this.variables)
+            {
+                if (!vs.IsDouble())
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public override VariablesMulriplication Derivative()
@@ -1220,6 +1838,41 @@ namespace MagicLibrary.MathUtils.Functions
                 }
             }
             return new VariablesMulriplication(this);
+        }
+
+        public override bool IsLeaf()
+        {
+            if (this.variables.Count(vs => vs.Constant != 0) == 1)
+            {
+                return this.variables.Find(vs => vs.Constant != 0).IsLeaf();
+            }
+            return false;
+        }
+
+        public override FunctionElement ToLeaf()
+        {
+            if (this.IsLeaf())
+            {
+                return this.variables[0].ToLeaf();
+            }
+            return null;
+        }
+
+        public override bool IsConstant()
+        {
+            foreach (var vs in this.variables)
+            {
+                if (!vs.IsConstant())
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public override void ParseFromString(string func)
+        {
+            this.ReplaceThisWithElement(Function.FromString(func));
         }
     }
 }
