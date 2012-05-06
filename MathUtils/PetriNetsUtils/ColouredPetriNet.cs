@@ -18,6 +18,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         public ColouredPetriNet(ColouredPetriGraph graph)
         {
             this.Graph = graph;
+            this.Graph.Colors.RegisterAllFunctions();
             r = new Random();
         }
 
@@ -62,33 +63,19 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         }
 
         /// <summary>
-        /// Get array of transitions which are available at this marking
-        /// If marking is null it use current net state
+        /// Get array of transitions which are available
         /// </summary>
-        /// <param name="marking">Marking in which we want to know available transitions (marking of the net will not change)</param>
         /// <returns></returns>
-        public Transition[] GetAvailableTransitions(uint[] marking = null)
+        public ColouredTransition[] GetAvailableTransitions()
         {
-            if (marking != null)
-            {
-                this.SaveMarkingAsStartMarking();
-                this.SetMarking(marking);
-            }
-            List<Transition> l = new List<Transition>();
-            Graph.GetVertices().ForEach(delegate(IVertex v)
-            {
-                if (v is Transition)
-                {
-                    if ((v as Transition).IsAvailable())
-                    {
-                        l.Add(v as Transition);
-                    }
-                }
-            });
+            List<ColouredTransition> l = new List<ColouredTransition>();
 
-            if (marking != null)
+            foreach (var t in this.Graph.GetTransitions())
             {
-                this.ResetMarking();
+                if (t.IsAvailable())
+                {
+                    l.Add(t);
+                }
             }
 
             return l.ToArray();
@@ -101,7 +88,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         /// <param name="marking"></param>
         /// <param name="t"></param>
         /// <returns></returns>
-        public uint[] GetStateAfterExecute(uint[] marking, Transition t)
+        public uint[] GetStateAfterExecute(uint[] marking, ColouredTransition t)
         {
             uint[] newMarking = null;
 
@@ -122,14 +109,14 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             return newMarking;
         }
 
-        public void ExecuteTransition(Transition t)
+        public void ExecuteTransition(ColouredTransition t)
         {
             t.Execute();
         }
 
         public void ExecuteRandomTransition()
         {
-            Transition[] ts = GetAvailableTransitions();
+            ColouredTransition[] ts = GetAvailableTransitions();
             if (ts.Length > 0)
             {
                 ExecuteTransition(ts[r.Next(ts.Length)]);

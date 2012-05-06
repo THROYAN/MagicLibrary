@@ -2,18 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MagicLibrary.MathUtils.Functions;
 
 namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
 {
+    [Serializable]
     public class ColouredPlace : Place
     {
-        private ColorSet colorSet { get { return this.collection[this.ColorSetName]; } }
+        public ColorSet ColorSet { get { return this.collection[this.ColorSetName]; } }
 
         public string ColorSetName { get; set; }
 
         public List<Token> InitTokens { get; private set; }
-        public List<Token> Tokens { get; set; }
-        public string InitFunction { get; set; }
+        public MultiSet<Function> Tokens { get; set; }
+        private string _initFunction;
+        public string InitFunction { get { return this._initFunction; } set { this._initFunction = value; this.ResetMarking(); } }
 
         private ColorSetCollection collection { get; set; }
 
@@ -26,17 +29,17 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             this.ColorSetName = colorName;
             this.collection = (this.Graph as ColouredPetriGraph).Colors;
             this.InitTokens = new List<Token>();
-            this.Tokens = new List<Token>();
+            this.Tokens = new MultiSet<Function>();
         }
 
         public bool IsLegalColor()
         {
-            return this.collection.Contains(this.ColorSetName);
+            return this.collection.ContainsColorSet(this.ColorSetName);
         }
 
         public bool IsLegalInitTokens()
         {
-            return this.InitTokens.TrueForAll(t => this.colorSet.IsLegal(t.Function));
+            return this.InitTokens.TrueForAll(t => this.ColorSet.IsLegal(t.Function));
         }
 
         public override void CopyTo(MathUtils.Graphs.IVertex vertex)
@@ -63,9 +66,19 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         /// </summary>
         public void ResetMarking()
         {
-            this.Tokens = new List<Token>();
-
-            
+            this.Tokens = new MultiSet<Function>();
+            try
+            {
+                var f = new Function();
+                f.ParseFromString(this.InitFunction);
+                if (f.Variables.Length == 0)
+                {
+                    this.Tokens = new MultiSet<Function>(f);
+                }
+            }
+            catch
+            {
+            }
         }
     }
 }
