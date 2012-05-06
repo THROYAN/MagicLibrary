@@ -9,18 +9,116 @@ using MagicLibrary.Exceptions;
 
 namespace MagicLibrary.MathUtils.Functions
 {
+    [Serializable]
     public class Function : FunctionElement
     {
+        public const string TrueString = "true";
+        public const string FalseString = "false";
+
         #region Basic function
         /// <summary>
         /// All math function which you can use in your functions
         /// </summary>
-        private static List<IMathFunction> _allFunctions = new List<IMathFunction>()
+        private static List<IMathFunction> _basicFunctions = new List<IMathFunction>()
         {
-            new MathOperator("plus", (f1, f2) => f1 + f2, "\\+"),
-            new MathOperator("minus", (f1, f2) => f1 - f2, "-"),
-            new MathOperator("multiply", (f1, f2) => f1 * f2, "\\*"),
-            new MathOperator("divide", (f1, f2) => f1 / f2, "/"),
+            MultiSet<Function>.SumOperator,
+            MultiSet<Function>.MSElement,
+            MultiSet<Function>.SubOperator,
+            ListVariable.ListsConcat,
+            ListVariable.ListsSubtract,
+            ListVariable.ListLength,
+            ListVariable.MapFunction,
+            ListVariable.RemoveAll,
+            new MathOperator("plus", (f1, f2) => f1 + f2, "\\+"){ReverseOperator = (f1, f2) => f1 - f2},
+            new MathOperator("minus", (f1, f2) => f1 - f2, "-"){ReverseOperator = (f1, f2) => f1 + f2},
+            new MathOperator("multiply", (f1, f2) => f1 * f2, "\\*"){ReverseOperator = (f1, f2) => f1 / f2},
+            new MathOperator("divide", (f1, f2) => f1 / f2, "/") {ReverseOperator = (f1, f2) => f1 * f2},
+
+            new MathFunction("if", 3, delegate(FunctionElement[] d)
+                {
+                    if (d[0].Name.Equals(Function.TrueString) && d[0].MathFunctions.Count == 0)
+                    {
+                        return d[1];
+                    }
+                    if (d[0].Name.Equals(Function.FalseString) && d[0].MathFunctions.Count == 0)
+                    {
+                        return d[2];
+                    }
+                    var temp = d[0].Clone() as FunctionElement;
+                    temp.ForceAddFunction("if", d[1].Clone() as FunctionElement, d[2].Clone() as FunctionElement);
+                    return temp;
+
+                }, "{0}\\?{1}:{2}"),
+
+            new MathOperator("and", delegate(FunctionElement e1, FunctionElement e2)
+                {
+                    if ((e1.Name.Equals(Function.FalseString) && e1.MathFunctions.Count == 0) ||
+                        (e2.Name.Equals(Function.FalseString) && e2.MathFunctions.Count == 0))
+                    {
+                        return new Function(Function.FalseString);
+                    }
+
+                    if (e1.Name.Equals(Function.TrueString) && e2.Name.Equals(Function.TrueString) &&
+                         e1.MathFunctions.Count == 0 && e2.MathFunctions.Count == 0)
+                    {
+                        return new Function(Function.TrueString);
+                    }
+
+                    if (e1.IsConstant() || e2.IsConstant())
+                    {
+                        throw new InvalidMathFunctionParameters();
+                    }
+
+                    if (e1.Name.Equals(Function.TrueString) && e1.MathFunctions.Count == 0)
+                    {
+                        return e2.Clone() as FunctionElement;
+                    }
+
+                    if (e2.Name.Equals(Function.TrueString) && e2.MathFunctions.Count == 0)
+                    {
+                        return e1.Clone() as FunctionElement;
+                    }
+
+                    var temp = e1.Clone() as FunctionElement;
+                    temp.ForceAddFunction("and", e2);
+                    return temp;
+
+                }, "&&", true),
+
+            new MathOperator("or", delegate(FunctionElement e1, FunctionElement e2)
+                {
+                    if ((e1.Name.Equals(Function.TrueString) && e1.MathFunctions.Count == 0) ||
+                        (e2.Name.Equals(Function.TrueString) && e2.MathFunctions.Count == 0))
+                    {
+                        return new Function(Function.TrueString);
+                    }
+
+                    if (e1.Name.Equals(Function.FalseString) && e2.Name.Equals(Function.FalseString) &&
+                         e1.MathFunctions.Count == 0 && e2.MathFunctions.Count == 0)
+                    {
+                        return new Function(Function.FalseString);
+                    }
+
+                    if (e1.IsConstant() || e2.IsConstant())
+                    {
+                        throw new InvalidMathFunctionParameters();
+                    }
+
+                    if (e1.Name.Equals(Function.FalseString) && e1.MathFunctions.Count == 0)
+                    {
+                        return e2.Clone() as FunctionElement;
+                    }
+
+                    if (e2.Name.Equals(Function.FalseString) && e2.MathFunctions.Count == 0)
+                    {
+                        return e1.Clone() as FunctionElement;
+                    }
+
+                    var temp = e1.Clone() as FunctionElement;
+                    temp.ForceAddFunction("or", e2);
+                    return temp;
+
+                }, "\\|\\|", true),
 
             new MathOperator("power", delegate(FunctionElement func, FunctionElement power)
                 {
@@ -70,37 +168,95 @@ namespace MagicLibrary.MathUtils.Functions
                     f.ForceAddFunction("power", power);
                     return f;
                     
-                }, "\\^"),
-                new OneParameterMathFunction("cos", delegate(FunctionElement func)
+                }, "\\^") {ReverseOperator = delegate(FunctionElement d1, FunctionElement d2)
+                {
+                    return Function.GetMathFunction("power").Calculate(d1, -1 * d2);
+                }},
+
+                RecordVariable.RecordField,
+
+                new MathFunction("index", 2, delegate(FunctionElement[] d)
                     {
-                        var f = func.Clone() as FunctionElement;
+                        var v = d[0].ToLeaf();
 
-                        if(f.IsDouble())
+                        if (v is Variable && d[0].MathFunctions.Count == 0) // index of variable
                         {
-                            return new Function(Math.Cos(f.ToDouble()));
-                        }
-
-                        f.ForceAddFunction("cos");
-                        return f;
-
-                    }, "cos{0}"),
-                #region Relations
-                new MathOperator("equals", delegate(FunctionElement e1, FunctionElement e2)
-                    {
-                        var v1 = e1.ToLeaf() as FunctionElement;
-                        var v2 = e2.ToLeaf() as FunctionElement;
-
-                        if (v1 is Variable || v2 is Variable)
-                        {
-                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
+                            if (d[1].ToLeaf() is Variable || (d[1].IsDouble() && (int)d[1].ToDouble() == d[1].ToDouble())) // index is variable or int
                             {
-                                return new Function("true");
+                                var temp = d[0].Clone() as FunctionElement;
+                                temp.ForceAddFunction("index", d[1]);
+                                return temp;
+                            }
+                        }
+                        if (v is ListVariable) // index of list
+                        {
+                            if (d[1].IsDouble())
+                            {
+                                var index = d[1].ToDouble();
+                                if ((int)index != index) // index is int?
+                                {
+                                    throw new InvalidMathFunctionParameters();
+                                }
+
+                                return (v as ListVariable).Values[(int)index]; // return element of list
+                            }
+                            if (d[1] is Variable)
+                            {
+                                var temp = d[0].Clone() as Function;
+                                temp.ForceAddFunction("index", d[1]);
+                                return temp;
                             }
                         }
 
-                        if (v1.IsConstant() && v2.IsConstant())
+                        throw new InvalidMathFunctionParameters();
+                    }, "{0}\\[{1}\\]"),
+                    //new MathFunction("list", 1, delegate(FunctionElement[] d)
+                    //{
+                    //    var v = d[0].ToLeaf();
+
+                    //    if (v is Variable && d[0].MathFunctions.Count == 0) // index of variable
+                    //    {
+                    //        if (d[1].ToLeaf() is Variable || (d[1].IsDouble() && (int)d[1].ToDouble() == d[1].ToDouble())) // index is variable or int
+                    //        {
+                    //            var temp = d[0].Clone() as FunctionElement;
+                    //            temp.ForceAddFunction("index", d[1]);
+                    //            return temp;
+                    //        }
+                    //    }
+                    //    if (v is ListVariable) // index of list
+                    //    {
+                    //        if (d[1].IsDouble())
+                    //        {
+                    //            var index = d[1].ToDouble();
+                    //            if ((int)index != index) // index is int?
+                    //            {
+                    //                throw new InvalidMathFunctionParameters();
+                    //            }
+
+                    //            return (v as ListVariable).Values[(int)index]; // return element of list
+                    //        }
+                    //        if (d[1] is Variable)
+                    //        {
+                    //            var temp = d[0].Clone() as Function;
+                    //            temp.ForceAddFunction("index", d[1]);
+                    //            return temp;
+                    //        }
+                    //    }
+
+                    //    throw new InvalidMathFunctionParameters();
+                    //}, "\\[{0}\\]"),
+                #region Relations
+                new MathOperator("equals", delegate(FunctionElement e1, FunctionElement e2)
+                    {
+                        if (e1.Equals(e2))
                         {
-                            return new Function(v1.Equals(v2) ? "true" : "false");
+                            return new Function(Function.TrueString);
+                        }
+
+                        // сюда оно дойдёт только если функции не равны
+                        if(e1.IsConstant() && e2.IsConstant())
+                        {
+                            return new Function(Function.FalseString);
                         }
 
                         var temp = e1.Clone() as FunctionElement;
@@ -110,20 +266,14 @@ namespace MagicLibrary.MathUtils.Functions
                     }, "=="),
                     new MathOperator("less then", delegate(FunctionElement e1, FunctionElement e2)
                     {
-                        var v1 = e1.ToLeaf() as FunctionElement;
-                        var v2 = e2.ToLeaf() as FunctionElement;
-
-                        if (v1 is Variable || v2 is Variable)
+                        if (e1.Equals(e2))
                         {
-                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
-                            {
-                                return new Function("false");
-                            }
+                            return new Function(Function.FalseString);
                         }
 
-                        if (v1.IsDouble() && v2.IsDouble())
+                        if (e1.IsDouble() && e2.IsDouble())
                         {
-                            return new Function(v1.ToDouble() < v2.ToDouble() ? "true" : "false");
+                            return new Function(e1.ToDouble() < e2.ToDouble() ? Function.TrueString : Function.FalseString);
                         }
 
                         var temp = e1.Clone() as FunctionElement;
@@ -133,20 +283,14 @@ namespace MagicLibrary.MathUtils.Functions
                     }, "<"),
                     new MathOperator("greater then", delegate(FunctionElement e1, FunctionElement e2)
                     {
-                        var v1 = e1.ToLeaf() as FunctionElement;
-                        var v2 = e2.ToLeaf() as FunctionElement;
-
-                        if (v1 is Variable || v2 is Variable)
+                        if (e1.Equals(e2))
                         {
-                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
-                            {
-                                return new Function("false");
-                            }
+                            return new Function(Function.FalseString);
                         }
 
-                        if (v1.IsDouble() && v2.IsDouble())
+                        if (e1.IsDouble() && e2.IsDouble())
                         {
-                            return new Function(v1.ToDouble() > v2.ToDouble() ? "true" : "false");
+                            return new Function(e1.ToDouble() > e2.ToDouble() ? Function.TrueString : Function.FalseString);
                         }
 
                         var temp = e1.Clone() as FunctionElement;
@@ -156,25 +300,19 @@ namespace MagicLibrary.MathUtils.Functions
                     }, ">"),
                     new MathOperator("less or equals", delegate(FunctionElement e1, FunctionElement e2)
                     {
-                        var v1 = e1.ToLeaf() as FunctionElement;
-                        var v2 = e2.ToLeaf() as FunctionElement;
-
-                        if (v1 is Variable || v2 is Variable)
+                        if (e1.Equals(e2))
                         {
-                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
-                            {
-                                return new Function("true");
-                            }
+                            return new Function(Function.TrueString);
                         }
 
-                        if (v1.IsDouble() && v2.IsDouble())
+                        if (e1.IsDouble() && e2.IsDouble())
                         {
-                            return new Function(v1.ToDouble() <= v2.ToDouble() ? "true" : "false");
+                            return new Function(e1.ToDouble() <= e2.ToDouble() ? Function.TrueString : Function.FalseString);
                         }
 
-                        if (v1.IsConstant() && v2.IsConstant())
+                        if (e1.IsConstant() && e2.IsConstant())
                         {
-                            return new Function(v1.Equals(v2) ? "true" : "false");
+                            return new Function(Function.FalseString);
                         }
 
                         var temp = e1.Clone() as FunctionElement;
@@ -184,25 +322,19 @@ namespace MagicLibrary.MathUtils.Functions
                     }, "<="),
                     new MathOperator("greater or equals", delegate(FunctionElement e1, FunctionElement e2)
                     {
-                        var v1 = e1.ToLeaf() as FunctionElement;
-                        var v2 = e2.ToLeaf() as FunctionElement;
-
-                        if (v1 is Variable || v2 is Variable)
+                        if (e1.Equals(e2))
                         {
-                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
-                            {
-                                return new Function("true");
-                            }
+                            return new Function(Function.TrueString);
                         }
 
-                        if (v1.IsDouble() && v2.IsDouble())
+                        if (e1.IsDouble() && e2.IsDouble())
                         {
-                            return new Function(v1.ToDouble() >= v2.ToDouble() ? "true" : "false");
+                            return new Function(e1.ToDouble() >= e2.ToDouble() ? Function.TrueString : Function.FalseString);
                         }
 
-                        if (v1.IsConstant() && v2.IsConstant())
+                        if (e1.IsConstant() && e2.IsConstant())
                         {
-                            return new Function(v1.Equals(v2) ? "true" : "false");
+                            return new Function(Function.FalseString);
                         }
 
                         var temp = e1.Clone() as FunctionElement;
@@ -212,20 +344,14 @@ namespace MagicLibrary.MathUtils.Functions
                     }, ">="),
                     new MathOperator("not equals", delegate(FunctionElement e1, FunctionElement e2)
                     {
-                        var v1 = e1.ToLeaf() as FunctionElement;
-                        var v2 = e2.ToLeaf() as FunctionElement;
-
-                        if (v1 is Variable || v2 is Variable)
+                        if (e1.Equals(e2))
                         {
-                            if (v1 is Variable && v2 is Variable && (v1 as Variable).Name.Equals(v2))
-                            {
-                                return new Function("false");
-                            }
+                            return new Function(Function.FalseString);
                         }
 
-                        if (v1.IsConstant() && v2.IsConstant())
+                        if (e1.IsConstant() && e2.IsConstant())
                         {
-                            return new Function(v1.Equals(v2) ? "false" : "true");
+                            return new Function(Function.TrueString);
                         }
 
                         var temp = e1.Clone() as FunctionElement;
@@ -236,6 +362,8 @@ namespace MagicLibrary.MathUtils.Functions
                     #endregion
         };
         #endregion
+
+        private static List<IMathFunction> _allFunctions = new List<IMathFunction>(Function._basicFunctions);
 
         //private static List<IMathFunction> _allVariables = new List<IMathFunction>()
         //{
@@ -251,13 +379,25 @@ namespace MagicLibrary.MathUtils.Functions
             return Function._allFunctions.Find(mf => mf.FunctionName.Equals(name));
         }
 
+        /// <summary>
+        /// Add new global math function to use in Functions
+        /// </summary>
+        /// <param name="func"></param>
         public static void RegisterMathFunction(IMathFunction func)
         {
             if (Function.GetMathFunction(func.FunctionName) != null)
             {
-                throw new Exception(String.Format("It is already exist function with name '{0}'", func.FunctionName));
+                throw new InvalidFunctionStringException(func.FunctionName);
             }
             Function._allFunctions.Add(func);
+        }
+
+        /// <summary>
+        /// Reset all math functions to basic
+        /// </summary>
+        public static void ResetMathFunctions()
+        {
+            Function._allFunctions = new List<IMathFunction>(Function._basicFunctions);
         }
 
         public static bool IsArrayAttributes(string attrs)
@@ -332,9 +472,9 @@ namespace MagicLibrary.MathUtils.Functions
         /// <returns>Словарь, где ключи - это имена аттрибутов, а значения - это значения аттрибутов.</returns>
         public static Dictionary<string, string> ParseAttributes(string attributes)
         {
-            string attrs = attributes;
+            string attrs = Function.NormalizeString(attributes);
             Dictionary<string, string> d = new Dictionary<string, string>();
-            if (Regex.IsMatch(attrs, @"^\s?$"))
+            if (String.IsNullOrWhiteSpace(attrs))
                 return d;
 
             // Вложенные аттрибуты
@@ -413,13 +553,14 @@ namespace MagicLibrary.MathUtils.Functions
 
             if (Regex.IsMatch(attr, @"^\s?$"))
             {
-                return new KeyValuePair<string, string>("", "");
+                //return new KeyValuePair<string, string>("", "");
+                throw new InvalidAttributesException(attr, "<?>");
             }
             string[] patterns = new string[] {
                 //"^\\s*(?<name>\\w.*)\\s*[=:]\\s*\"(?<value>.+)\"\\s*$", // Name ="+asd"
                 @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*(?<value>'.+')\s*$", // name = '2asd'
                 @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*(?<value>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*$", // Name = asd2
-                @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*(?<value>-?\d+)\s*$", // MinLength = -12
+                @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*(?<value>-?\s*\d+)\s*$", // MinLength = -12
                 String.Format(
                         @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*[=:]\s*{0}\s*$",
                         Regex.Escape(String.Format(Function._innerAttrsMask, "```")).Replace("```", "(?<iAIndex>\\d+)")
@@ -429,7 +570,7 @@ namespace MagicLibrary.MathUtils.Functions
                         Regex.Escape(String.Format(Function._stringMask, "```")).Replace("```", "(?<sIndex>\\d+)")
                 ),
                 //"^\\s*\"(?<value>.+)\"\\s*$", // "asd2"
-                @"^\s*(?<value>'.+')\s*$", // 'asd2'
+                @"^\s*(?<value>\'.+\')\s*$", // 'asd2'
                 String.Format(
                         @"^\s*{0}\s*$",
                         Regex.Escape(String.Format(Function._innerAttrsMask, "```")).Replace("```", "(?<iAIndex>\\d+)")
@@ -520,7 +661,7 @@ namespace MagicLibrary.MathUtils.Functions
 
         public Function(string func)
         {
-            this.ReplaceThisWithElement(Function.FromString(func));
+            this.ReplaceThisWithElement(Function.Parse(func));
         }
 
         public Function(VariablesMulriplication v)
@@ -562,7 +703,12 @@ namespace MagicLibrary.MathUtils.Functions
             }
         }
 
-        public static Function FromString(string func)
+        public static string NormalizeString(string str)
+        {
+            return Regex.Replace(str.Replace('\n', ' ').Replace('\r', ' ').Replace('\t', ' '), "\\s{2,}", " ");
+        }
+
+        public static Function Parse(string func)
         {
             List<Function> fs = new List<Function>();
 
@@ -576,6 +722,20 @@ namespace MagicLibrary.MathUtils.Functions
             }
         }
 
+        public static bool TryParse(string funcString, out Function func)
+        {
+            try
+            {
+                func = Function.Parse(funcString);
+                return true;
+            }
+            catch (InvalidFunctionStringException)
+            {
+                func = null;
+                return false;
+            }
+        }
+
         private static Function _fromString(string func, List<Function> fs)
         {
             string f = func;
@@ -584,7 +744,7 @@ namespace MagicLibrary.MathUtils.Functions
             List<string> ss = new List<string>();
             string mask = @".*?(?<str>\'.*?\')";
 
-            var m = Regex.Match(f, mask);
+            Match m = Regex.Match(f, mask);
 
             while (m.Success)
             {
@@ -594,6 +754,8 @@ namespace MagicLibrary.MathUtils.Functions
 
                 m = Regex.Match(f, mask);
             }
+
+            f = Function.NormalizeString(f);
 
             // теперь ищем все параметры функций (больше 1-го параметра), тоесть что-то в скобках и через запятую
             mask = @".*(?<all>\(\s*(?<params>.*,.*?)\))";
@@ -683,10 +845,10 @@ namespace MagicLibrary.MathUtils.Functions
                 f = f.Replace(String.Format(Function._stringMask, i), ss[i]);
             }
 
-            return Function._fromStringWitoutBracers(f, fs);
+            return Function._fromStringWithoutBracers(f, fs);
         }
 
-        private static Function _fromStringWitoutBracers(string func, List<Function> fs)
+        private static Function _fromStringWithoutBracers(string func, List<Function> fs)
         {
             string f = func.Trim();
 
@@ -713,7 +875,7 @@ namespace MagicLibrary.MathUtils.Functions
                     _paramsIndexes[i] = String.Format(@"\s*(?<p{0}>.+)\s*", i);
                 }
 
-                mask = String.Format(mf.ToStringFormat, _paramsIndexes);
+                mask = String.Format(String.Format("^{0}$", mf.ToStringFormat), _paramsIndexes);
 
                 m = Regex.Match(f, mask);
 
@@ -724,7 +886,7 @@ namespace MagicLibrary.MathUtils.Functions
                         FunctionElement[] _params = new FunctionElement[mf.ParamsCount];
                         for (int i = 0; i < mf.ParamsCount; i++)
                         {
-                            _params[i] = Function._fromStringWitoutBracers(m.Groups[String.Format("p{0}", i)].Value, fs);
+                            _params[i] = Function._fromStringWithoutBracers(m.Groups[String.Format("p{0}", i)].Value, fs);
                         }
 
                         try
@@ -740,13 +902,13 @@ namespace MagicLibrary.MathUtils.Functions
             }
 
             // Digit
-            mask = @"^\s*(?<value>\d+([\.\,]\d+)?)\s*$";
+            mask = @"^\s*(?<value>(?<minus>-?)\s*(?<digit>\d+([\.\,]\d+)?))\s*$";
 
             m = Regex.Match(f, mask);
 
             if (m.Success)
             {
-                return new Function(Double.Parse(m.Groups["value"].Value));
+                return new Function(Double.Parse(m.Groups["minus"].Value + m.Groups["digit"].Value));
             }
 
             // Variable
@@ -783,6 +945,23 @@ namespace MagicLibrary.MathUtils.Functions
             }
             catch { }
 
+            try
+            {
+                if (f.Contains(ListVariable.OpenBracer))
+                {
+                    for (int i = 0; i < fs.Count; i++)
+                    {
+                        if (f.IndexOf(String.Format(Function._funcMask, i)) != -1)
+                        {
+                            f = f.Replace(String.Format(Function._funcMask, i), String.Format("({0})", fs[i].ToString()));
+                        }
+                    }
+                    var v = new ListVariable(f);
+                    return new Function(v);
+                }
+            }
+            catch { }
+
             throw new InvalidFunctionStringException(func);
         }
 
@@ -793,7 +972,7 @@ namespace MagicLibrary.MathUtils.Functions
             var temp = variablesMulriplication.ToString();
             if (temp == "0" || temp == "")
                 return;
-            var v = this.variables.Find(vs => vs.Equals(variablesMulriplication));
+            var v = this.variables.Find(vs => vs.EqualsVariablesWith(variablesMulriplication));
             if (v != null)
             {
                 v.Constant += variablesMulriplication.Constant;
@@ -1110,15 +1289,6 @@ namespace MagicLibrary.MathUtils.Functions
             return this * -1;
         }
 
-        public override FunctionElement Pow(double power)
-        {
-            /*if (this.IsConstant())
-            {
-                return new Function(Math.Pow(this.ToDouble(), power));
-            }*/
-            return this.ApplyFunction("power", new Function(power));
-        }
-
         public FunctionElement Sqrt()
         {
             return this.Pow(0.5);
@@ -1289,6 +1459,32 @@ namespace MagicLibrary.MathUtils.Functions
 
             return equation;*/
             #endregion
+        }
+
+        public Equation SolutionByVariable(string name)
+        {
+            Function f = new Function();
+            Function copy = this.Clone() as Function;
+
+            for (int i = 0; i < copy.variables.Count; i++)
+            {
+                var vs = copy.variables[i];
+                if (vs.HasVariable(name))
+                {
+                    f += vs;
+                    copy.variables.Remove(vs);
+                }
+            }
+
+            if (f.variables[0].Constant < 0)
+            {
+                f *= -1;
+                copy *= -1;
+            }
+
+            var temp = f.ReverseAllFunctionsTo(copy);
+            
+            return new Equation(temp.Item1 as Function, temp.Item2 as Function);
         }
 
         public Function GetElementsWithVariable(string name)
@@ -1591,7 +1787,7 @@ namespace MagicLibrary.MathUtils.Functions
         }
 
         private string[] varNames = null;
-        public string[] Variables
+        public override string[] Variables
         {
             get
             {
@@ -1768,19 +1964,12 @@ namespace MagicLibrary.MathUtils.Functions
         {
             Function f = new Function();
 
-#warning Сделать что-то такое
+#warning Сделать что-то такое.. или не надо?
 
             return f;
         }
 
         public bool IsNeedBrackets()
-        {
-            //if (Math.Abs(this.Degree) != 1)
-            //    return false;
-            return this.IsNeedBracketsForPower();
-        }
-
-        public bool IsNeedBracketsForPower()
         {
             int count = 0;
             for (int i = 0; i < this.variables.Count; i++)
@@ -1795,12 +1984,12 @@ namespace MagicLibrary.MathUtils.Functions
                     return true;
             }
 
-            if (this. IsVariableMultiplication())
+            if (this.IsVariableMultiplication())
             {
                 var temp = this.ToVariableMultiplication();
                 if (temp.IsFunction())
                 {
-                    return temp.ToFunction().IsNeedBracketsForPower();
+                    return temp.ToFunction().IsNeedBrackets();
                 }
             }
             return false;
@@ -1842,9 +2031,9 @@ namespace MagicLibrary.MathUtils.Functions
 
         public override bool IsLeaf()
         {
-            if (this.variables.Count(vs => vs.Constant != 0) == 1)
+            if (this.notNullVariables.Count == 1)
             {
-                return this.variables.Find(vs => vs.Constant != 0).IsLeaf();
+                return this.notNullVariables[0].IsLeaf();
             }
             return false;
         }
@@ -1853,7 +2042,12 @@ namespace MagicLibrary.MathUtils.Functions
         {
             if (this.IsLeaf())
             {
-                return this.variables[0].ToLeaf();
+                var l = this.variables[0].ToLeaf();
+                foreach (var mf in this.MathFunctions)
+                {
+                    l = l.ApplyFunction(mf.Item1.FunctionName, mf.Item2);
+                }
+                return l;
             }
             return null;
         }
@@ -1872,7 +2066,17 @@ namespace MagicLibrary.MathUtils.Functions
 
         public override void ParseFromString(string func)
         {
-            this.ReplaceThisWithElement(Function.FromString(func));
+            this.ReplaceThisWithElement(Function.Parse(func));
+        }
+
+        public override Dictionary<string, FunctionElement> GetVariablesByConstant(FunctionElement e)
+        {
+            if (this.IsLeaf())
+            {
+                return this.ToLeaf().GetVariablesByConstant(e);
+            }
+            return new Equation(this, new Function(e)).RigorousSolution();
+            //throw new NotImplementedException();
         }
     }
 }

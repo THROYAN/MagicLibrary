@@ -10,11 +10,13 @@ using System.Text.RegularExpressions;
 
 namespace MagicLibrary.MathUtils
 {
+    [Serializable]
     public class MultiSet<T> : FunctionElement, IEnumerable<KeyValuePair<T, int>>
         where T : FunctionElement
     {
         private const string _elementsSeparator = "`";
         private const string _plus = "++";
+        private const string _minus = "--";
 
         private Dictionary<T, int> counts;
 
@@ -28,7 +30,6 @@ namespace MagicLibrary.MathUtils
         {
             this.counts = new Dictionary<T, int>();
             this.MathFunctions = new List<Tuple<IMathFunction, FunctionElement[]>>();
-
 
             if (e.IsLeaf())
             {
@@ -122,13 +123,13 @@ namespace MagicLibrary.MathUtils
         }
 
         /// <summary>
-        /// Get count of elements of the multi-set.
+        /// Count of all elements of the multi-set.
         /// </summary>
         public int Count
         {
             get
             {
-                return this.counts.Count(item => item.Value > 0);
+                return this.counts.Values.Count(i => i > 0);
             }
         }
 
@@ -164,6 +165,28 @@ namespace MagicLibrary.MathUtils
             sb.Remove(sb.Length - MultiSet<T>._plus.Length, MultiSet<T>._plus.Length);
 
             return sb.ToString();
+        }
+
+        public override string[] Variables
+        {
+            get
+            {
+                List<string> vars = new List<string>();
+
+                foreach (var item in this.counts)
+                {
+                    var vars2 = item.Key.Variables;
+                    foreach (var item2 in vars2)
+                    {
+                        if (!vars.Contains(item2))
+                        {
+                            vars.Add(item2);
+                        }
+                    }
+                }
+
+                return vars.ToArray();
+            }
         }
 
         public int Multiplicity()
@@ -336,12 +359,32 @@ namespace MagicLibrary.MathUtils
 
                     return m1 + m2;
                 }
-                catch(Exception e)
+                catch(Exception)
                 {
                     throw new InvalidMathFunctionParameters();
                 }
 
             }, Regex.Escape(MultiSet<T>._plus));
+
+        public static MathOperator SubOperator = new MathOperator("multiset sub", delegate(FunctionElement e1, FunctionElement e2)
+        {
+            if (!(e1.IsLeaf() && e2.IsLeaf()))
+            {
+                throw new InvalidMathFunctionParameters();
+            }
+            try
+            {
+                var m1 = new MultiSet<T>(e1);
+                var m2 = new MultiSet<T>(e2);
+
+                return m1 - m2;
+            }
+            catch (Exception)
+            {
+                throw new InvalidMathFunctionParameters();
+            }
+
+        }, Regex.Escape(MultiSet<T>._minus));
 
         public static MathOperator MSElement = new MathOperator("`", delegate(FunctionElement e1, FunctionElement e2)
             {
@@ -364,11 +407,6 @@ namespace MagicLibrary.MathUtils
         public override bool IsDouble()
         {
             return false;
-        }
-
-        public override FunctionElement Pow(double power)
-        {
-            throw new NotImplementedException();
         }
 
         public override FunctionElement SetVariableValue(string name, double value)
@@ -486,6 +524,11 @@ namespace MagicLibrary.MathUtils
         }
 
         public override void ParseFromString(string func)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Dictionary<string, FunctionElement> GetVariablesByConstant(FunctionElement e)
         {
             throw new NotImplementedException();
         }

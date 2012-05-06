@@ -10,11 +10,13 @@ namespace MagicLibrary.MathUtils.MathFunctions
     {
         string FunctionName { get; }
         FunctionElement Calculate(params FunctionElement[] d);
-        Func<FunctionElement[], FunctionElement> Function { get; }
-        IMathFunction ReverseFunction { get; }
+        FunctionElement CalculateReverse(params FunctionElement[] d);
+        Func<FunctionElement[], FunctionElement> MainFunction { get; }
+        Func<FunctionElement[], FunctionElement> ReverseFunction { get; }
         string ToStringFormat { get; }
         string ToStringML(string varName, FunctionElement[] _params);
         string ToString(string name, params FunctionElement[] _params);
         int ParamsCount { get; set; }
+        bool HasReverse();
     }
 }

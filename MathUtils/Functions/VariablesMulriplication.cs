@@ -5,6 +5,7 @@ using System.Text;
 
 namespace MagicLibrary.MathUtils.Functions
 {
+    [Serializable]
     public class VariablesMulriplication : ICloneable
     {
         /// <summary>
@@ -29,10 +30,43 @@ namespace MagicLibrary.MathUtils.Functions
 
         public VariablesMulriplication AddVariable(FunctionElement variable)
         {
-            if (this.HasVariable(variable.Name) && variable.MathFunctions.Count == 0)
+            if (this.HasVariable(variable.Name))
             {
                 var v = this.GetVariableByName(variable.Name);
-                v *= variable;
+                if (variable.MathFunctions.Count == 0 && v.MathFunctions.Count == 0)
+                {
+                    // x * x
+                    v.ApplyFunction("power", new Function(2));
+                }
+                else
+                {
+                    if (variable.MathFunctions.Count == 1 && variable.MathFunctions.Last() == Function.GetMathFunction("power") &&
+                        v.MathFunctions.Count == 1 && v.MathFunctions.Last() == Function.GetMathFunction("power"))
+                    {
+                        // sum powers
+                        v.MathFunctions[0] = new Tuple<MathFunctions.IMathFunction, FunctionElement[]>(Function.GetMathFunction("power"),
+                            new FunctionElement[] { v.MathFunctions[0].Item2[0] + variable.MathFunctions[0].Item2[0] });
+                    }
+                    else
+                    {
+                        if (variable.MathFunctions.Count == 0 && v.MathFunctions.Count == 1 && v.MathFunctions[0] == Function.GetMathFunction("power"))
+                        {
+                            variable.ApplyFunction("power", v.MathFunctions[0].Item2[0] + 1);
+                        }
+                        else
+                        {
+                            if (v.MathFunctions.Count == 0 && variable.MathFunctions.Count == 1 && variable.MathFunctions[0] == Function.GetMathFunction("power"))
+                            {
+                                variable.MathFunctions[0] = new Tuple<MathFunctions.IMathFunction, FunctionElement[]>(Function.GetMathFunction("power"),
+                                    new FunctionElement[] { variable.MathFunctions[0].Item2[0] + 1 });
+                            }
+                            else
+                            {
+                                this.variables.Add(variable);
+                            }
+                        }
+                    }
+                }
             }
             else
             {
@@ -408,28 +442,33 @@ namespace MagicLibrary.MathUtils.Functions
             {
                 var v = obj as VariablesMulriplication;
 
-                if (this.VarsCount != v.VarsCount)
-                    return false;
-
-                for (int i = 0; i < v.variables.Count; i++)
-                {
-                    if (!this.variables.Exists(vs => vs.Equals(v.variables[i])))
-                    {
-                        return false;
-                    }
-                }
-
-                for (int i = 0; i < this.variables.Count; i++)
-                {
-                    if (!v.variables.Exists(vs => vs.Equals(this.variables[i])))
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
+                return this.Constant == v.Constant && this.EqualsVariablesWith(v);
             }
             return base.Equals(obj);
+        }
+
+        public bool EqualsVariablesWith(VariablesMulriplication v)
+        {
+            if (this.VarsCount != v.VarsCount)
+                return false;
+
+            for (int i = 0; i < v.variables.Count; i++)
+            {
+                if (!this.variables.Exists(vs => vs.Equals(v.variables[i])))
+                {
+                    return false;
+                }
+            }
+
+            for (int i = 0; i < this.variables.Count; i++)
+            {
+                if (!v.variables.Exists(vs => vs.Equals(this.variables[i])))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public override int GetHashCode()
@@ -627,19 +666,11 @@ namespace MagicLibrary.MathUtils.Functions
                 List<string> vars = new List<string>();
                 this.variables.ForEach(delegate(FunctionElement v)
                 {
-                    if (v is Function)
+                    var vars2 = v.Variables;
+                    foreach (var v2 in vars2)
                     {
-                        var vars2 = (v as Function).Variables;
-                        foreach (var v2 in vars2)
-                        {
-                            if (!vars.Contains(v2))
-                                vars.Add(v2);
-                        }
-                    }
-                    else
-                    {
-                        if (!v.IsConstant() && !vars.Contains(v.Name))
-                            vars.Add(v.Name);
+                        if (!vars.Contains(v2))
+                            vars.Add(v2);
                     }
                 });
                 return vars.ToArray();

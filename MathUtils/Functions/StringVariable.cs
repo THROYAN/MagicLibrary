@@ -8,6 +8,7 @@ using MagicLibrary.Exceptions;
 
 namespace MagicLibrary.MathUtils.Functions
 {
+    [Serializable]
     public class StringVariable : FunctionElement
     {
         public override string Name { get { return String.Format("'{0}'", this.Value); } }
@@ -25,11 +26,6 @@ namespace MagicLibrary.MathUtils.Functions
             //int i;
             //return Int32.TryParse(this.Name, out i);
             return false;
-        }
-
-        public override FunctionElement Pow(double power)
-        {
-            throw new NotImplementedException();
         }
 
         public override FunctionElement SetVariableValue(string name, double value)
@@ -107,13 +103,19 @@ namespace MagicLibrary.MathUtils.Functions
             return this;
         }
 
-        public static MathOperator Concat = new MathOperator("concat", delegate(FunctionElement e1, FunctionElement e2)
+        public static MathOperator StringConcat = new MathOperator("string concat", delegate(FunctionElement e1, FunctionElement e2)
             {
                 var s1 = e1.ToLeaf() as StringVariable;
                 var s2 = e2.ToLeaf() as StringVariable;
                 if (s1 != null && s2 != null)
                 {
                     return new Function(new StringVariable(String.Concat(s1.Value, s2.Value)));
+                }
+                if ((e1.ToLeaf() is Variable && s2 != null) || (e2.ToLeaf() is Variable && s1 != null))
+                {
+                    var temp = e1.Clone() as FunctionElement;
+                    temp.ForceAddFunction("string concat", e2.Clone() as FunctionElement);
+                    return temp;
                 }
 
                 throw new InvalidMathFunctionParameters();
@@ -124,7 +126,6 @@ namespace MagicLibrary.MathUtils.Functions
         {
             return true;
         }
-
 
         public override void ParseFromString(string func)
         {
@@ -137,6 +138,19 @@ namespace MagicLibrary.MathUtils.Functions
             }
 
             this.Value = m.Groups["value"].Value;
+        }
+
+        public override Dictionary<string, FunctionElement> GetVariablesByConstant(FunctionElement e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string[] Variables
+        {
+            get
+            {
+                return new string[0];
+            }
         }
     }
 }

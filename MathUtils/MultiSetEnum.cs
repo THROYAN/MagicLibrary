@@ -6,6 +6,7 @@ using MagicLibrary.MathUtils.Functions;
 
 namespace MagicLibrary.MathUtils
 {
+    [Serializable]
     public class MultiSetEnum<T> : IEnumerator<KeyValuePair<T, int>>
         where T : FunctionElement
     {

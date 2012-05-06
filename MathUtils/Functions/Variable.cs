@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace MagicLibrary.MathUtils.Functions
 {
+    [Serializable]
     public class Variable : FunctionElement
     {
         private string name;
@@ -75,15 +76,6 @@ namespace MagicLibrary.MathUtils.Functions
                 return "";
 
             return base.ToString();
-        }
-
-        /// <summary>
-        /// Involution variable
-        /// </summary>
-        /// <param name="degree"></param>
-        public override FunctionElement Pow(double degree)
-        {
-            return this.ApplyFunction("power", new Function(degree));
         }
 
         public override object Clone()
@@ -283,6 +275,26 @@ namespace MagicLibrary.MathUtils.Functions
         public override bool IsConstant()
         {
             return this.Name.Equals("");
+        }
+
+        public override Dictionary<string, FunctionElement> GetVariablesByConstant(FunctionElement e)
+        {
+            return new Dictionary<string, FunctionElement>()
+            {
+                { this.Name, this.ReverseAllFunctionsTo(e).Item2 }
+            };
+        }
+
+        public override string[] Variables
+        {
+            get
+            {
+                if (this.Name != "")
+                {
+                    return new string[] { this.Name };
+                }
+                return new string[0];
+            }
         }
     }
 }

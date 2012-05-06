@@ -5,6 +5,7 @@ using System.Text;
 
 namespace MagicLibrary.MathUtils.Functions
 {
+    [Serializable]
     public class Equation
     {
         public Function LeftPart { get; set; }
@@ -80,6 +81,49 @@ namespace MagicLibrary.MathUtils.Functions
         public Function AllToLeft()
         {
             return this.LeftPart - this.RightPart;
+        }
+
+        public Dictionary<Function, FunctionElement> Solution()
+        {
+            Dictionary<Function, FunctionElement> d = new Dictionary<Function, FunctionElement>();
+            var f = this.AllToLeft();
+
+            foreach (var var in f.Variables)
+            {
+                var s = f.SolutionByVariable(var);
+                if (s.LeftPart.IsLeaf() && s.LeftPart.Variables.Length == 1)
+                {
+                    d.Add(s.LeftPart, s.RightPart);
+                }
+            }
+
+            return d;
+        }
+
+        public Dictionary<string, FunctionElement> RigorousSolution()
+        {
+            Dictionary<string, FunctionElement> d = new Dictionary<string, FunctionElement>();
+            var f = this.AllToLeft();
+
+            foreach (var var in f.Variables)
+            {
+                var s = f.SolutionByVariable(var);
+                if (s.LeftPart.ToString().Equals(var))
+                {
+                    d.Add(var, s.RightPart);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            return d;
+        }
+
+        public Equation SolutionBy(string varName)
+        {
+            return this.AllToLeft().SolutionByVariable(varName);
         }
     }
 }

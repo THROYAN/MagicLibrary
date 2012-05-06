@@ -4,14 +4,18 @@ using System.Linq;
 using System.Text;
 
 using MagicLibrary.MathUtils.MathFunctions;
+using MagicLibrary.Exceptions;
 
 namespace MagicLibrary.MathUtils.Functions
 {
+    [Serializable]
     public abstract class FunctionElement: ICloneable
     {
         public List<Tuple<IMathFunction, FunctionElement[]>> MathFunctions { get; set; }
 
         public abstract string Name { get; }
+
+        public abstract string[] Variables { get; }
 
         protected bool _isModified;
 
@@ -21,7 +25,10 @@ namespace MagicLibrary.MathUtils.Functions
 
         public abstract bool IsConstant();
 
-        public abstract FunctionElement Pow(double power);
+        public FunctionElement Pow(double power)
+        {
+            return this.ApplyFunction("power", new Function(power));
+        }
 
         public abstract FunctionElement SetVariableValue(string name, double value);
 
@@ -140,7 +147,6 @@ namespace MagicLibrary.MathUtils.Functions
 
         public abstract object Clone();
 
-#warning это ооочень медленно
         public override bool Equals(object obj)
         {
             if (obj == null)
@@ -267,15 +273,59 @@ namespace MagicLibrary.MathUtils.Functions
                 var res = Function.GetMathFunction(funcName).Calculate(p.ToArray());
                 return res;
             }
-            catch
+            catch(InvalidMathFunctionParameters)
             {
-                throw new Exception(String.Format("Invalif parameters for {0} function", funcName));
+                throw new InvalidMathFunctionParameters(funcName);
             }
         }
 
         public FunctionElement ApplyFunction(string funcName)
         {
             return this.ApplyFunction(funcName, null);
+        }
+
+        /// <summary>
+        /// It's work like this
+        /// x^2 = y
+        /// this = x^2
+        /// other = y
+        /// this.ReverseAllFunctionsTo(other)
+        /// => this = x
+        /// other = y ^ -2
+        /// It change current instance!
+        /// </summary>
+        /// <param name="e"></param>
+        /// <returns>Item1 - modified original object, Item2 - modified e param</returns>
+        public Tuple<FunctionElement, FunctionElement> ReverseAllFunctionsTo(FunctionElement e)
+        {
+            FunctionElement e1;
+            if (this.IsLeaf())
+            {
+                e1 = this.ToLeaf();
+            }
+            else
+            {
+                e1 = this.Clone() as FunctionElement;
+            }
+
+            var e2 = e.Clone() as FunctionElement;
+
+            for (int i = e1.MathFunctions.Count - 1; i >= 0; i--)
+            {
+                if (!e1.MathFunctions[i].Item1.HasReverse())
+                {
+                    break;
+                }
+                List<FunctionElement> pars = new List<FunctionElement>();
+                pars.Add(e2);
+                pars.AddRange(e1.MathFunctions[i].Item2);
+                e2 = e1.MathFunctions[i].Item1.CalculateReverse(pars.ToArray());
+                //e2 = e2.ApplyFunction(e1.MathFunctions[i].Item1.FunctionName, e1.MathFunctions[i].Item2);
+                e1.MathFunctions.RemoveAt(i);
+            }
+            Function e11 = new Function(e1);
+            
+            return new Tuple<FunctionElement,FunctionElement>(new Function(e1), e2);
         }
 
         /// <summary>
@@ -389,6 +439,11 @@ namespace MagicLibrary.MathUtils.Functions
         public override string ToString()
         {
             string s = this.Name;
+            bool b = this is Function ? (this as Function).IsNeedBrackets() : false;
+            if (b && this.MathFunctions.Count > 0)
+            {
+                s = String.Format("({0})", s);
+            }
             foreach (var mf in this.MathFunctions)
             {
                 s = mf.Item1.ToString(s, mf.Item2);
@@ -399,5 +454,7 @@ namespace MagicLibrary.MathUtils.Functions
         public abstract bool IsLeaf();
 
         public abstract FunctionElement ToLeaf();
+
+        public abstract Dictionary<string, FunctionElement> GetVariablesByConstant(FunctionElement e);
     }
 }
