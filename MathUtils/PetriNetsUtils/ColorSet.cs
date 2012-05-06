@@ -12,8 +12,11 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
     /// <summary>
     /// Класс для создания различных цветов.
     /// </summary>
+    [Serializable]
     public class ColorSet
     {
+        public static Random r = new Random();
+
         public const string RegexMaskOfIndexes = "^{0}\\[(?<index>-?\\d+)\\]";
 
         private ColorSetType type;
@@ -70,13 +73,14 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         public const string FalseStringAttribute = "FalseString";
         public const string FromAttribute = "From";
         public const string ToAttribute = "To";
+        public const string ElementsColor = "OfColor";
 
         public const string UnitDefault = "'()'";
         public const string TrueDefault = "true";
         public const string FalseDefault = "false";
         #endregion
 
-        private static Dictionary<string, ColorSetType> typeNames = new Dictionary<string, ColorSetType>()
+        public static Dictionary<string, ColorSetType> Types = new Dictionary<string, ColorSetType>()
             {
                 { "unit", ColorSetType.Unit },
                 { "int", ColorSetType.Int },
@@ -85,6 +89,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                 { "index", ColorSetType.Index },
                 { "record", ColorSetType.Record },
                 { "enum", ColorSetType.Enum },
+                { "list", ColorSetType.List },
             };
 
         public ColorSet(string name, ColorSetType type, ColorSetCollection colors, string attrs = "")
@@ -103,7 +108,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             string[] masks = new string[]
             {
                 //@"^(?<name>\w.*)\s*=\s*(?<type>\w+)$",
-                @"^\s*(?<name>\w.*)\s*=\s*(?<type>\w+)\((?<attrs>.*)\)\s*$"
+                @"^\s*(?<name>([A-Z]|[a-z])([A-Z]|[a-z]|[0-9])*)\s*=\s*(?<type>\w+)\((?<attrs>(.|\n)*)\)\s*$"
             };
 
             Match m = null;
@@ -111,13 +116,18 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             foreach (var mask in masks)
             {
                 m = Regex.Match(colorSetDescription, mask);
+                if (m.Success)
+                {
+                    break;
+                }
             }
-            if (m == null || !m.Success || !ColorSet.typeNames.ContainsKey(m.Groups["type"].Value))
+
+            if (m == null || !m.Success || !ColorSet.Types.ContainsKey(m.Groups["type"].Value))
             {
                 throw new InvalidColorSetAttributesException("NewColorSet()", colorSetDescription);
             }
             this.Name = m.Groups["name"].Value.Trim();
-            this.type = ColorSet.typeNames[m.Groups["type"].Value];
+            this.type = ColorSet.Types[m.Groups["type"].Value];
             this.attrs = m.Groups["attrs"].Value;
             this.Collection = colors;
             
@@ -192,13 +202,12 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             try
             {
                 this.ParsedAttributes = Function.ParseAttributes(this.Attributes);
+                this.ConvertAttributes();
             }
             catch (InvalidAttributesException)
             {
                 throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
             }
-
-            this.ConvertAttributes();
         }
 
         /// <summary>
@@ -284,7 +293,9 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                             if (this.IsArrayAttributes())
                             {
                                 // Опять же, если не верно задан промежуток
-                                if (Convert.ToInt32(this.ParsedAttributes[Function.KeyOfIndex(1)]) > Convert.ToInt32(this.ParsedAttributes[Function.KeyOfIndex(2)]))
+                                if (!this.IsInt(this.ParsedAttributes[Function.KeyOfIndex(1)]) ||
+                                    !this.IsInt(this.ParsedAttributes[Function.KeyOfIndex(2)]) ||
+                                    Convert.ToInt32(this.ParsedAttributes[Function.KeyOfIndex(1)]) > Convert.ToInt32(this.ParsedAttributes[Function.KeyOfIndex(2)]))
                                 {
                                     throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
                                 }
@@ -313,7 +324,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                     break;
                 case ColorSetType.String:
 
-                    #region Магическое разбираение магических аттрибутов строк
+                    #region Магическое разбираение не менее магических аттрибутов строк
                     switch (this.ParsedAttributes.Keys.Count)
                     {
                         case 0:
@@ -369,8 +380,14 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                                 m = Regex.Match(this.ParsedAttributes[Function.KeyOfIndex(2)], @"^'(?<min>\d+)\.\.(?<max>\d+)'$");
                                 if (m.Success)
                                 {
+                                    if (Int32.Parse(m.Groups["min"].Value) > Int32.Parse(m.Groups["max"].Value))
+                                    {
+                                        throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
+                                    }
+
                                     this.ParsedAttributes[ColorSet.MinLengthAttribute] = m.Groups["min"].Value;
                                     this.ParsedAttributes[ColorSet.MaxLengthAttribute] = m.Groups["max"].Value;
+
                                     this.ParsedAttributes.Remove(Function.KeyOfIndex(2));
                                 }
                                 else
@@ -440,6 +457,14 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                     {
                         throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
                     }
+                    for (int i = 0; i < this.ParsedAttributes.Count; i++)
+                    {
+                        var item = this.ParsedAttributes.ElementAt(i);
+                        if (!Regex.IsMatch(item.Value, @"^\'.*\'$"))
+                        {
+                            this.ParsedAttributes[item.Key] = String.Format("'{0}'", item.Value);
+                        }
+                    }
 
                     break;
                 case ColorSetType.Index:
@@ -507,10 +532,50 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                     }
                     foreach (var attr in this.ParsedAttributes)
                     {
-                        if (!this.Collection.Contains(attr.Value))
+                        if (!this.Collection.ContainsColorSet(attr.Value))
                         {
                             throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
                         }
+                    }
+
+                    break;
+                case ColorSetType.List:
+
+                    switch (this.ParsedAttributes.Keys.Count)
+                    {
+                        case 1:
+                            if (this.IsArrayAttributes())
+                            {
+                                this.ParsedAttributes[ColorSet.ElementsColor] = this.ParsedAttributes[Function.KeyOfIndex(1)];
+                                this.ParsedAttributes[ColorSet.MinLengthAttribute] = ColorSet.EmptyAttribute;
+                                this.ParsedAttributes[ColorSet.MaxLengthAttribute] = ColorSet.EmptyAttribute;
+
+                                this.ParsedAttributes.Remove(Function.KeyOfIndex(1));
+                            }
+                            else
+                            {
+                                if (!this.ParsedAttributes.ContainsKey(ColorSet.ElementsColor))
+                                {
+                                    throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
+                                }
+                                this.FillNoneAttributes(1, ColorSet.ElementsColor, ColorSet.MinLengthAttribute, ColorSet.MaxLengthAttribute);
+                            }
+                            break;
+                        case 2: case 3:
+
+                            if (!this.ParsedAttributes.ContainsKey(ColorSet.ElementsColor))
+                            {
+                                throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
+                            }
+                            this.FillNoneAttributes(this.ParsedAttributes.Keys.Count, ColorSet.ElementsColor, ColorSet.MinLengthAttribute, ColorSet.MaxLengthAttribute);
+
+                            break;
+                        default:
+                            throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
+                    }
+                    if (this.Collection.GetColorSet(this.ParsedAttributes[ColorSet.ElementsColor]) == null)
+                    {
+                        throw new InvalidColorSetAttributesException(this.Name, this.Attributes);
                     }
 
                     break;
@@ -527,7 +592,43 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             var v = tokenF.ToLeaf();
             if (v is Variable && (v as Variable).Name != "")
             {
-                return this.Collection.HasVariable(v.ToString()) && this.Collection.GetVariable(v.ToString()).ColorSet == this;
+                if (!this.Collection.HasVariable(v.Name))
+                {
+                    return false;
+                }
+
+                var var = this.Collection.GetVariable(v.Name);
+                if (var.ColorSet.Type == ColorSetType.Record)
+                {
+                    var curC = var.ColorSet;
+                    for (int i = 0; i < tokenF.MathFunctions.Count; i++)
+                    {
+                        if (!(tokenF.MathFunctions[i].Item1 == RecordVariable.RecordField))
+                        {
+                            break;
+                        }
+                        var s = tokenF.MathFunctions[i].Item2[0].ToLeaf() as StringVariable;
+                        if (!curC.ParsedAttributes.ContainsKey(s.Value))
+                        {
+                            return false;
+                        }
+                        curC = this.Collection.GetColorSet(curC.ParsedAttributes[s.Value]);
+                    }
+                    return curC == this;
+                }
+                if (var.ColorSet.Type == ColorSetType.List &&
+                    v.MathFunctions.Count > 0 &&
+                    v.MathFunctions[0].Item1 == Function.GetMathFunction("index"))
+                {
+                    if (var.ColorSet == this && this.Type == ColorSetType.Index)
+                    {
+                        return true;
+                    }
+
+                    return this.Collection.GetColorSet(var.ColorSet.ParsedAttributes[ColorSet.ElementsColor]) == this;
+                }
+
+                return this.Collection.GetVariable(v.Name).ColorSet == this;
             }
 
             switch (this.Type)
@@ -635,7 +736,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                     // Сюда тоже не должен дойти
                     foreach (var item in this.ParsedAttributes)
                     {
-                        if (item.Value.Equals(s.Value))
+                        if (item.Value.Equals(s.ToString()))
                             return true;
                     }
 
@@ -669,6 +770,23 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                         return false;
                     }
 
+                    if (r.Values.ContainsKey(Function.KeyOfIndex(1)))
+                    {
+                        if (r.Values.Count != this.ParsedAttributes.Count)
+                        {
+                            return false;
+                        }
+
+                        for (int i = 0; i < this.ParsedAttributes.Count; i++)
+                        {
+                            if (!this.Collection[this.ParsedAttributes.ElementAt(i).Value].IsLegal(r.Values[Function.KeyOfIndex(i + 1)] as Function))
+                            {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+
                     foreach (var item in this.ParsedAttributes)
                     {
                         if (!r.Values.ContainsKey(item.Key))
@@ -683,7 +801,25 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                     }
 
                     return true;
+                case ColorSetType.List:
 
+                    var l = tokenF.ToLeaf() as ListVariable;
+
+                    if (l == null)
+                    {
+                        return false;
+                    }
+
+                    foreach (var value in l.Values)
+                    {
+#warning Осторожно, тут такое четкое приведение типов, шо я не могу
+                        if (!this.Collection.GetColorSet(this.ParsedAttributes[ColorSet.ElementsColor]).IsLegal(value as Function))
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
             }
             return false;
         }
@@ -743,18 +879,23 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
 
                     StringBuilder sb = new StringBuilder();
                     int i = 0;
+                    var r = token.Function.ToLeaf() as RecordVariable;
                     
-                    foreach (var item in Function.ParseAttributes(token.Value))
+                    foreach (var item in r.Values)
                     {
                         i++;
                         ColorSet color = this.Collection[this.ParsedAttributes[item.Key]];
 
-                        Token t = new Token(item.Value, color);
+                        Token t = new Token(new Function(item.Value), color);
                         sb.AppendFormat("[{0}] => {1}, ", item.Key, t.ToString());
                     }
                     sb.Remove(sb.Length - 2, 2);
 
                     return String.Format("({0})", sb.ToString());
+
+                case ColorSetType.List:
+
+                    return token.Value;
 
                 default:
 
@@ -773,7 +914,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         /// <returns></returns>
         public string GetTypeName()
         {
-            foreach (var item in ColorSet.typeNames)
+            foreach (var item in ColorSet.Types)
             {
                 if (item.Value.Equals(this.Type))
                 {
@@ -794,6 +935,74 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             }
 
             return tokens;
+        }
+
+        public Function GetRandomValue()
+        {
+            switch (this.Type)
+            {
+                case ColorSetType.Int:
+
+                    if (this.ParsedAttributes[ColorSet.MinValueAttribute] == ColorSet.EmptyAttribute ||
+                        this.ParsedAttributes[ColorSet.MaxValueAttribute] == ColorSet.EmptyAttribute)
+                    {
+                        throw new Exception();
+                    }
+                    return new Function(r.Next(Int32.Parse(this.ParsedAttributes[ColorSet.MinValueAttribute]),
+                                            Int32.Parse(this.ParsedAttributes[ColorSet.MaxValueAttribute])));
+                    
+                case ColorSetType.String:
+
+                    throw new Exception();
+
+                case ColorSetType.Enum:
+
+                    return new Function(this.ParsedAttributes[Function.KeyOfIndex(r.Next(1, this.ParsedAttributes.Count))]);
+
+                case ColorSetType.Bool:
+
+                    return new Function(r.Next(0, 1) == 0 ? ColorSet.TrueDefault : ColorSet.FalseDefault);
+
+                case ColorSetType.Unit:
+
+                    return new Function(ColorSet.UnitDefault);
+
+                case ColorSetType.Index:
+
+                    return new Function(String.Format("{0}[{1}]", this.Name, r.Next(Int32.Parse(ColorSet.FromAttribute), Int32.Parse(ColorSet.ToAttribute))));
+
+                case ColorSetType.Record:
+
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var attr in this.ParsedAttributes)
+                    {
+                        sb.AppendFormat("{0}, ", this.Collection.GetColorSet(attr.Value).GetRandomValue());
+                    }
+                    sb = sb.Remove(sb.Length - 2, 2);
+                    return new Function(String.Format("{1} {0} {2}", sb.ToString(), "{", "}"));
+
+                case ColorSetType.List:
+
+                    if (this.ParsedAttributes[ColorSet.MinLengthAttribute] == ColorSet.EmptyAttribute ||
+                        this.ParsedAttributes[ColorSet.MaxLengthAttribute] == ColorSet.EmptyAttribute)
+                    {
+                        throw new Exception();
+                    }
+                    int count = r.Next(
+                        Int32.Parse(this.ParsedAttributes[ColorSet.MinLengthAttribute]),
+                        Int32.Parse(this.ParsedAttributes[ColorSet.MaxLengthAttribute]));
+
+                    FunctionElement[] elements = new FunctionElement[count];
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        elements[i] = this.Collection.GetColorSet(this.ParsedAttributes[ColorSet.ElementsColor]).GetRandomValue();
+                    }
+                    return new Function(new ListVariable(elements));
+
+                default:
+                    throw new Exception();
+            }
         }
     }
 }

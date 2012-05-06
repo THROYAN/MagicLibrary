@@ -5,6 +5,6 @@ using System.Text;
 
 namespace MagicLibrary.MathUtils.PetriNetsUtils
 {
-#warning Забыл про LIST!!!
-    public enum ColorSetType { Int, String, Enum, Bool, Unit, Index, Record }
+    [Serializable]
+    public enum ColorSetType { Int, String, Enum, Bool, Unit, Index, Record, List }
 }

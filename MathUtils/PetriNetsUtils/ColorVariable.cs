@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MagicLibrary.Exceptions;
 
 namespace MagicLibrary.MathUtils.PetriNetsUtils
 {
+    [Serializable]
     public class ColorVariable
     {
         public ColorSet ColorSet { get; set; }
@@ -17,6 +19,13 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             this.Name = name;
         }
 
-        public ColorVariable(string name, ColorSetCollection colors, string color) : this(name, colors[color]) { }
+        public ColorVariable(string name, ColorSetCollection colors, string color)
+            : this(name, colors[color])
+        {
+            if (this.ColorSet == null)
+            {
+                throw new InvalidVariableException(name, color);
+            }
+        }
     }
 }

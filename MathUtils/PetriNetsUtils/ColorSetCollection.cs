@@ -3,19 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using MagicLibrary.Exceptions;
+using MagicLibrary.MathUtils.MathFunctions;
+using MagicLibrary.MathUtils.Functions;
 
 namespace MagicLibrary.MathUtils.PetriNetsUtils
 {
+    [Serializable]
     public class ColorSetCollection : IEnumerable<ColorSet>
     {
-        public List<ColorVariable> ColorVariables { get; set; }
         private List<ColorSet> colorSets { get; set; }
+        public List<ColorVariable> ColorVariables { get; set; }
+        public List<string> FunctionsDescription { get; set; }
 
         public ColorSetCollection()
         {
             this.colorSets = new List<ColorSet>();
             this.ColorVariables = new List<ColorVariable>();
-
+            this.FunctionsDescription = new List<string>();
         }
 
         public ColorSetCollection(string colorsDescription)
@@ -33,25 +38,44 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             this.colorSets = new List<ColorSet>();
             //var cs = colorsDescription.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             var cs = Regex.Split(colorsDescription, "(\n|\t|\r)");
-            foreach (var c in cs)
+            this.LoadColorsFromString(cs);
+        }
+
+        /// <summary>
+        /// Создаёт набор цветов используя массив строковых представлений цветов
+        /// </summary>
+        /// <param name="colorsDescription"></param>
+        public void LoadColorsFromString(string[] colorSets)
+        {
+            this.colorSets = new List<ColorSet>();
+            //var cs = colorsDescription.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            
+            foreach (var c in colorSets)
             {
-                if (!Regex.IsMatch(c, "^\\s*$"))
-                    this.AddColorSet(new ColorSet(c, this));
+                try
+                {
+                    if (!Regex.IsMatch(c, "^\\s*$"))
+                        this.AddColorSet(new ColorSet(c, this));
+                }
+                catch (InvalidColorSetAttributesException e)
+                {
+                    throw e;
+                }
             }
         }
 
         public void AddColorSet(ColorSet cs)
         {
-            if (!this.colorSets.Contains(cs) && !this.Contains(cs.Name))
+            if (!this.colorSets.Contains(cs) && !this.ContainsColorSet(cs.Name))
             {
                 this.colorSets.Add(cs);
                 switch (cs.Type)
                 {
                     case ColorSetType.Enum:
-                        foreach (var item in cs.ParsedAttributes)
-                        {
-                            this.AddVariable(item.Value, cs.Name);
-                        }
+                        //foreach (var item in cs.ParsedAttributes)
+                        //{
+                        //    this.AddVariable(item.Value, cs.Name);
+                        //}
 
                         break;
                     case ColorSetType.Bool:
@@ -63,16 +87,19 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
                     case ColorSetType.Unit:
                         this.AddVariable(cs.ParsedAttributes[ColorSet.NameAttribute], cs.Name);
                         break;
+                    case ColorSetType.Index:
+                        this.AddVariable(cs.Name, cs.Name);
+                        break;
                 }
             }
         }
 
-        public bool Contains(ColorSet cs)
+        public bool ContainsColorSet(ColorSet cs)
         {
             return this.colorSets.Contains(cs);
         }
 
-        public bool Contains(string name)
+        public bool ContainsColorSet(string name)
         {
             return this.colorSets.Exists(c => c.Name.Equals(name));
         }
@@ -81,8 +108,13 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         {
             get
             {
-                return this.colorSets.Find(c => c.Name.Equals(name));
+                return this.GetColorSet(name);
             }
+        }
+
+        public ColorSet GetColorSet(string name)
+        {
+            return this.colorSets.Find(c => c.Name.Equals(name));
         }
 
         public IEnumerator<ColorSet> GetEnumerator()
@@ -137,6 +169,39 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         public ColorVariable GetVariable(string name)
         {
             return this.ColorVariables.Find(cv => cv.Name.Equals(name));
+        }
+
+        public void ClearColors()
+        {
+            this.colorSets.Clear();
+            this.ClearVariables();
+        }
+
+        public void ClearVariables()
+        {
+            this.ColorVariables.Clear();
+        }
+
+        public void ClearFunctions()
+        {
+            this.FunctionsDescription.Clear();
+            Function.ResetMathFunctions();
+        }
+
+        public void AddFunction(string function)
+        {
+            Function.RegisterMathFunction(MathFunction.MultiLineFunction(function));
+            this.FunctionsDescription.Add(function);
+        }
+
+        public void RegisterAllFunctions()
+        {
+            Function.ResetMathFunctions();
+            foreach (var f in this.FunctionsDescription)
+            {
+                var mf = MathFunction.MultiLineFunction(f);
+                Function.RegisterMathFunction(mf);
+            }
         }
     }
 }

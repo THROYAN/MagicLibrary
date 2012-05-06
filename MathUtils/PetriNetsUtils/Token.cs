@@ -8,6 +8,7 @@ using MagicLibrary.MathUtils.Functions;
 
 namespace MagicLibrary.MathUtils.PetriNetsUtils
 {
+    [Serializable]
     public class Token
     {
         private Function _value { get; set; }
@@ -72,7 +73,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
 
         public override string ToString()
         {
-           return String.Format("{0}", this.Value);
+           return String.Format("{0}", this.ColorSet.ShowToken(this));
         }
 
         public bool IsLegal()
