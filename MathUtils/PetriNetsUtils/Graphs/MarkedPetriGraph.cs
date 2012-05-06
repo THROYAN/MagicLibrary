@@ -11,10 +11,13 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
     public class MarkedPetriGraph : PetriNetGraph
     {
         private uint currentTokenCount;
+        private double _currentWeight;
+
         public MarkedPetriGraph()
             : base()
         {
             currentTokenCount = 0;
+            this._currentWeight = 1;
 
             MarkedPetriGraph.SetDefaultEventHandlers(this);
         }
@@ -22,8 +25,13 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         public override IVertex CreateVertex(object vertexValue)
         {
             return this.addToSecond
-                        ? new Transition(this, vertexValue.ToString()) as IVertex
+                        ? new MarkedTransition(this, vertexValue.ToString()) as IVertex
                         : new MarkedPlace(this, vertexValue.ToString(), this.currentTokenCount) as IVertex;
+        }
+
+        public override IEdge CreateEdge(object u, object v)
+        {
+            return new WeightedArc(this, u, v, this._currentWeight);
         }
 
         public void AddPlace(string name, uint tokenCount)
@@ -47,6 +55,13 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
             this.CopyTo(graph);
 
             return graph;
+        }
+
+        public void AddArc(string tail, string head, double weight)
+        {
+            this._currentWeight = weight;
+            this.AddArc(tail, head);
+            this._currentWeight = 1;
         }
     }
 }

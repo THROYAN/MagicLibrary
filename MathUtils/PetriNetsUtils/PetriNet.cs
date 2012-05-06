@@ -154,21 +154,21 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         /// </summary>
         /// <param name="marking">Marking in which we want to know available transitions (marking of the net will not change)</param>
         /// <returns></returns>
-        public Transition[] GetAvailableTransitions(uint[] marking = null)
+        public MarkedTransition[] GetAvailableTransitions(uint[] marking = null)
         {
             if (marking != null)
             {
                 this.SaveMarkingAsStartMarking();
                 this.SetMarking(marking);
             }
-            List<Transition> l = new List<Transition>();
+            List<MarkedTransition> l = new List<MarkedTransition>();
             Graph.GetVertices().ForEach(delegate(IVertex v)
             {
-                if (v is Transition)
+                if (v is MarkedTransition)
                 {
-                    if ((v as Transition).IsAvailable())
+                    if ((v as MarkedTransition).IsAvailable())
                     {
-                        l.Add(v as Transition);
+                        l.Add(v as MarkedTransition);
                     }
                 }
             });
@@ -188,7 +188,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
         /// <param name="marking"></param>
         /// <param name="t"></param>
         /// <returns></returns>
-        public uint[] GetStateAfterExecute(uint[] marking, Transition t)
+        public uint[] GetStateAfterExecute(uint[] marking, MarkedTransition t)
         {
             uint[] newMarking = null;
 
@@ -209,14 +209,14 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils
             return newMarking;
         }
 
-        public void ExecuteTransition(Transition t)
+        public void ExecuteTransition(MarkedTransition t)
         {
             t.Execute();
         }
 
         public void ExecuteRandomTransition()
         {
-            Transition[] ts = GetAvailableTransitions();
+            MarkedTransition[] ts = GetAvailableTransitions();
             if (ts.Length > 0)
             {
                 ExecuteTransition(ts[r.Next(ts.Length)]);

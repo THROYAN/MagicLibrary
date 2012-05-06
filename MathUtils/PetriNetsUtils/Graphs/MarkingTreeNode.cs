@@ -158,7 +158,7 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
                 return;
             }
 
-            foreach (Transition transition in availableTransitions)
+            foreach (MarkedTransition transition in availableTransitions)
             {
                 (this.Tree as MarkingTree).AddMarking(petriNet.GetStateAfterExecute(this.Marking, transition), this.Value.ToString(), transition.Value.ToString());
             }

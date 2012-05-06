@@ -157,23 +157,23 @@ namespace MagicLibrary.MathUtils.Graphs
 
         public List<IVertex> GetVertices(Predicate<IVertex> match)
         {
-            return vertices.FindAll(match).ToList<IVertex>();
+            return vertices.FindAll(match).ToList();
         }
 
         public List<IEdge> GetEdges(Predicate<IEdge> match)
         {
-            return edges.FindAll(match).ToList<IEdge>();
+            return edges.FindAll(match).ToList();
         }
 
 
         public List<IVertex> GetVertices()
         {
-            return vertices.ToList<IVertex>();
+            return vertices.ToList();
         }
 
         public List<IEdge> GetEdges()
         {
-            return edges.ToList<IEdge>();
+            return edges.ToList();
         }
 
 

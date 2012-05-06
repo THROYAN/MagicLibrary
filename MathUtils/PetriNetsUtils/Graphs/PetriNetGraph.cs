@@ -9,7 +9,7 @@ using MagicLibrary.MathUtils.Graphs;
 namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
 {
     [Serializable]
-    public class PetriNetGraph : WeightedBiGraph
+    public class PetriNetGraph : BiGraph
     {
         private int pCounter { get; set; }
         private int tCounter { get; set; }
@@ -21,18 +21,20 @@ namespace MagicLibrary.MathUtils.PetriNetsUtils.Graphs
         {
             return GetVertexFromFirstPart(name) as Place;
         }
-        public Transition GetTransition(string name)
+        public ColouredTransition GetTransition(string name)
         {
-            return GetVertexFromSecondPart(name) as Transition;
+            return GetVertexFromSecondPart(name) as ColouredTransition;
         }
 
         public List<Place> GetPlaces()
         {
             return GetVertices().OfType<Place>().ToList();
         }
-        public List<Transition> GetTransitions()
+        public List<ColouredTransition> GetTransitions()
         {
-            return GetVertices().OfType<Transition>().ToList();
+            List<ColouredTransition> l = new List<ColouredTransition>();
+            this.GetVertices(v => v is ColouredTransition).ForEach(v => l.Add(v as ColouredTransition));
+            return l.ToList();
         }
 
         public PetriNetGraph() : base()
